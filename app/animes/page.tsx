@@ -125,14 +125,6 @@ const AnimesPage = () => {
             }
 
             const animesList = data.results || data;
-            console.log(animesList)
-          /*  const animesList = results.filter((show: TVShow) =>
-                show.origin_country?.includes('JP') ||
-                show.original_language === 'ja'
-            );*/
-
-            console.log(animesList)
-
 
             if (isLoadMore) {
                 setAnimes(prev => [...prev, ...animesList]);
