@@ -103,7 +103,7 @@ const AnimesPage = () => {
                 url = '/api/tv/discover';
                 queryParams.append('page', page.toString());
                 queryParams.append('sort_by', sortBy);
-                // Filtro específico para Animes (Japão)
+
                 queryParams.append('with_origin_country', 'JP');
 
                 if (selectedGenres.length > 0) {
@@ -124,11 +124,15 @@ const AnimesPage = () => {
                 throw new Error(data.error);
             }
 
-            const results = data.results || data;
-            const animesList = results.filter((show: TVShow) =>
+            const animesList = data.results || data;
+            console.log(animesList)
+          /*  const animesList = results.filter((show: TVShow) =>
                 show.origin_country?.includes('JP') ||
                 show.original_language === 'ja'
-            );
+            );*/
+
+            console.log(animesList)
+
 
             if (isLoadMore) {
                 setAnimes(prev => [...prev, ...animesList]);
@@ -152,7 +156,7 @@ const AnimesPage = () => {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-        
+
         fetchAnimes(1, false);
     }, [fetchAnimes]);
 

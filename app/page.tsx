@@ -16,24 +16,20 @@ import AnimeGrid from "@/app/components/AnimeGrid";
 export default function Home() {
   return (
       <div className="min-h-screen relative bg-gradient-to-b from-[#05050a] via-[#0a0a1a] to-[#0f0f13] text-white overflow-hidden">
-          {/* Imagem de fundo fixa */}
           <div className="fixed inset-0 z-0">
               <img
                   src="/backgroud.jpg"
                   alt="Universo"
                   className="w-full h-full object-cover opacity-30"
               />
-              {/* Overlay escuro para garantir legibilidade */}
               <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/90 via-[#0a0a1a]/100 to-[#0f0f13]/80" />
           </div>
         <div className="relative z-10">
             <Navbar />
-
             <main>
                 <Suspense fallback={<LoadingSkeleton />}>
                     <Hero />
                 </Suspense>
-
                 <div>
                     {/* Seção de Filmes Populares */}
                     <section className="max-w-7xl mx-auto px-4 py-12">
@@ -151,7 +147,6 @@ export default function Home() {
                         <ComicsGrid category="recent" limit={10} />
                     </section>
                 </div>
-
             </main>
 
             <footer className="bg-black/60 backdrop-blur-sm border-t border-white/5 py-12 mt-20">
@@ -162,8 +157,8 @@ export default function Home() {
                                 <PlayCircle className="w-6 h-6 text-white" />
                             </div>
                             <span className="text-xl font-bold tracking-tighter bg-gradient-to-r from-white to-indigo-400 bg-clip-text text-transparent">
-                STREAM<span className="text-indigo-500">WONDER</span>
-              </span>
+                                STREAM<span className="text-indigo-500">WONDER</span>
+                            </span>
                         </div>
 
                         <div className="text-gray-500 text-sm text-center">
