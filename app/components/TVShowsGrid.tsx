@@ -24,7 +24,7 @@ interface TVShowsGridProps {
     limit?: number;
 }
 
-const TVShowsGrid = ({ category = 'popular', limit = 20 }: TVShowsGridProps) => {
+const TVShowsGrid = ({ category = 'airing_today', limit = 10 }: TVShowsGridProps) => {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -96,13 +96,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 20 }: TVShowsGridProps) => 
         }, 10);
     }, []);
 
-    // Abrir seletor de episódios (para escolher temporada/episódio)
-    const handleOpenEpisodeSelector = useCallback((show: TVShow, event: React.MouseEvent | React.TouchEvent) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setSelectedShow(show);
-        setShowEpisodeSelector(true);
-    }, []);
 
     // Touch handlers para mobile
     const handleTouchStart = useCallback((e: React.TouchEvent, show: TVShow) => {

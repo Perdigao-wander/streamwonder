@@ -126,21 +126,12 @@ const Hero = () => {
                     {currentMovie.overview || 'Sinopse não disponível.'}
                 </p>
 
-                {/* Botões
-                <div className="flex flex-wrap gap-3 md:gap-4 pt-2 md:pt-4 animate-fade-in-up animation-delay-400">
-                    <Button className="bg-white text-black hover:bg-gray-200 px-6 md:px-8 py-3 md:py-6 text-base md:text-lg font-bold rounded-xl flex items-center gap-2 transition-all duration-300 hover:scale-105">
-                        <Play className="w-4 h-4 md:w-6 md:h-6 fill-current" /> Assistir Agora
-                    </Button>
-                    <Button variant="secondary" className="bg-white/10 hover:bg-white/20 text-white border-none px-6 md:px-8 py-3 md:py-6 text-base md:text-lg font-bold rounded-xl flex items-center gap-2 backdrop-blur-md transition-all duration-300 hover:scale-105">
-                        <Info className="w-4 h-4 md:w-6 md:h-6" /> Mais Informações
-                    </Button>
-                </div>*/}
             </div>
 
             {/* Botões de navegação - Desktop */}
             <button
                 onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hidden md:block"
+                className="absolute cursor-pointer left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-indigo-600/70 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hidden md:block"
                 aria-label="Slide anterior"
             >
                 <ChevronLeft className="w-6 h-6" />
@@ -148,7 +139,7 @@ const Hero = () => {
 
             <button
                 onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hidden md:block"
+                className="absolute right-4 cursor-pointer top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 hover:bg-indigo-600/70 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hidden md:block"
                 aria-label="Próximo slide"
             >
                 <ChevronRight className="w-6 h-6" />

@@ -26,7 +26,7 @@ interface MoviesGridProps {
     limit?: number;
 }
 
-const MoviesGrid = ({ type = 'movie', initialCategory = 'popular', limit = 20 }: MoviesGridProps) => {
+const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }: MoviesGridProps) => {
     const [items, setItems] = useState<Movie[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

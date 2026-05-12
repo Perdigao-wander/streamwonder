@@ -6,7 +6,9 @@ import Hero from '@/app/components/Hero';
 import LoadingSkeleton from '@/app/components/LoadingSkeleton';
 import MoviesGrid from '@/app/components/MoviesGrid';
 import TVShowsGrid from "@/app/components/TVShowsGrid";
-import {PlayCircle} from "lucide-react";
+import {ChevronRight, PlayCircle} from "lucide-react";
+import Link from "next/link";
+import ComicsGrid from "@/app/components/ComicsGrid";
 
 export default function Home() {
   return (
@@ -21,14 +23,71 @@ export default function Home() {
             <div>
                 {/* Seção de Filmes Populares */}
                 <section className="max-w-7xl mx-auto px-4 py-12">
-                    <h2 className="text-2xl font-bold text-white mb-6">Filmes Recentes 🎬</h2>
-                    <MoviesGrid type="movie" initialCategory="popular" />
+                    {/* Header com título e botão "Ver mais" */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                Filmes Recentes 🎬
+                            </h2>
+                        </div>
+
+                        <Link
+                            href="/movies"
+                            className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
+                        >
+                            <span>Ver todos</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                        </Link>
+                    </div>
+
+                    <MoviesGrid type="movie" initialCategory="popular" limit={10} />
                 </section>
 
                 {/* Seção de Séries Populares */}
                 <section className="max-w-7xl mx-auto px-4 py-12">
-                    <h2 className="text-2xl font-bold text-white mb-6">Séries 📺</h2>
+                    {/* Header com título e botão "Ver mais" */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                Séries 📺
+                            </h2>
+                        </div>
+
+                        <Link
+                            href="/series"
+                            className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
+                        >
+                            <span>Ver todos</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                        </Link>
+                    </div>
+
                     <TVShowsGrid/>
+                </section>
+
+                {/* Seção de HQs Populares */}
+                <section className="max-w-7xl mx-auto px-4 py-12">
+                    {/* Header com título e botão "Ver mais" */}
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
+                            <h2 className="text-2xl md:text-3xl font-bold text-white">
+                                HQs 📚
+                            </h2>
+                        </div>
+
+                        <Link
+                            href="/hqs"
+                            className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
+                        >
+                            <span>Ver todos</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                        </Link>
+                    </div>
+
+                    <ComicsGrid category="recent" limit={10} />
                 </section>
             </div>
 
