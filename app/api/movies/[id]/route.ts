@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 export async function GET(

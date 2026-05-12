@@ -2,7 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
-
+type Serie = {
+    id: string;
+    title: string;
+    name: string;
+    poster_path: string;
+    backdrop_path: string;
+    overview: string;
+    first_air_date: string;
+    release_date: string;
+    vote_average: string;
+    media_type: string;
+    vote_count: string;
+    popularity: string;
+    genre_ids: string;
+    origin_country: string;
+}
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
@@ -30,7 +45,7 @@ export async function GET(request: NextRequest) {
 
         const data = await response.json();
 
-        const series = data.results.map((serie: any) => ({
+        const series = data.results.map((serie: Serie) => ({
             id: serie.id,
             title: serie.name,
             name: serie.name,

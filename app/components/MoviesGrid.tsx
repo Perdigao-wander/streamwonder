@@ -35,66 +35,64 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
     const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-    const fetchItems = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            let endpoint = '';
-
-            if (type === 'movie') {
-                switch (initialCategory) {
-                    case 'popular':
-                        endpoint = '/api/movies/popular';
-                        break;
-                    case 'top_rated':
-                        endpoint = '/api/movies/top-rated';
-                        break;
-                    case 'now_playing':
-                        endpoint = '/api/movies/now-playing';
-                        break;
-                    case 'upcoming':
-                        endpoint = '/api/movies/upcoming';
-                        break;
-                    default:
-                        endpoint = '/api/movies/popular';
-                }
-            } else if (type === 'tv') {
-                endpoint = `/api/tv/${initialCategory}`;
-            } else {
-                endpoint = `/api/trending/all/week`;
-            }
-
-            const response = await fetch(endpoint);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            // Limitar número de resultados
-            setItems(data.slice(0, limit));
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao carregar');
-            console.error('Erro:', err);
-        } finally {
-            setLoading(false);
-        }
-    }, [type, initialCategory, limit]);
-
+    // Remova o useCallback e a função fetchItems externa
     useEffect(() => {
+        const fetchItems = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                let endpoint = '';
+
+                if (type === 'movie') {
+                    switch (initialCategory) {
+                        case 'popular':
+                            endpoint = '/api/movies/popular';
+                            break;
+                        case 'top_rated':
+                            endpoint = '/api/movies/top-rated';
+                            break;
+                        case 'now_playing':
+                            endpoint = '/api/movies/now-playing';
+                            break;
+                        case 'upcoming':
+                            endpoint = '/api/movies/upcoming';
+                            break;
+                        default:
+                            endpoint = '/api/movies/popular';
+                    }
+                } else if (type === 'tv') {
+                    endpoint = `/api/tv/${initialCategory}`;
+                } else {
+                    endpoint = `/api/trending/all/week`;
+                }
+
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setItems(data.slice(0, limit));
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Erro ao carregar');
+                console.error('Erro:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchItems();
-    }, [fetchItems]);
+    }, [type, initialCategory, limit]); // ✅ Dependências corretas
 
     // Handler para clique (desktop e mobile)
     const handleWatch = useCallback((item: Movie, event?: React.MouseEvent | React.TouchEvent) => {
-        // Prevenir propagação do evento
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
 
-        // Pequeno delay para evitar conflito com toque
         setTimeout(() => {
             setSelectedItem(item);
             setShowPlayer(true);
@@ -115,7 +113,6 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
         const deltaX = Math.abs(touchEnd.clientX - touchStart.x);
         const deltaY = Math.abs(touchEnd.clientY - touchStart.y);
 
-        // Se o movimento foi menor que 10px, considera como clique
         if (deltaX < 10 && deltaY < 10) {
             e.preventDefault();
             handleWatch(item, e);
@@ -162,7 +159,6 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                 <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500 mb-4">Erro: {error}</p>
                 <button
-                    onClick={fetchItems}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                     Tentar Novamente
@@ -221,7 +217,6 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                                     }}
                                 />
 
-                                {/* Overlay que aparece no hover/toque */}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
                                     <button
                                         className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform pointer-events-none"
@@ -231,7 +226,6 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                                     </button>
                                 </div>
 
-                                {/* Badge de nota */}
                                 {rating && (
                                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
@@ -241,12 +235,10 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                                     </div>
                                 )}
 
-                                {/* Badge de tipo */}
                                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
                                     <Film className="w-3 h-3 text-indigo-500" />
                                 </div>
 
-                                {/* Badge de ano */}
                                 <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
                                     <div className="space-y-0.5">
                                         <div className="text-white text-xs font-semibold truncate">
@@ -263,7 +255,6 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                 })}
             </div>
 
-            {/* Player Modal */}
             {showPlayer && selectedItem && (
                 <VideoPlayer
                     movieId={selectedItem.id}

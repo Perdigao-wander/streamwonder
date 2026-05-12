@@ -124,19 +124,21 @@ const MoviesPage = () => {
 
             setTotalPages(data.total_pages);
             setTotalResults(data.total_results);
+            console.log(totalResults)
             setCurrentPage(page);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao buscar filmes');
-            console.error('Erro:', err);
+            console.error('Erro:', error);
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
     }, [searchQuery, isSearching, sortBy, selectedGenres, selectedYear, minRating]);
 
-    // Executar busca quando os parâmetros mudarem
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
+
         fetchMovies(1, false);
     }, [fetchMovies]);
 
@@ -233,8 +235,17 @@ const MoviesPage = () => {
         <>
             <Navbar />
 
-            <div className="min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20">
-                <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className=" relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
+                <div className="fixed inset-0 z-0">
+                    <img
+                        src="/backgroud.jpg"
+                        alt="Universo"
+                        className="w-full h-full object-cover opacity-30"
+                    />
+                    {/* Overlay escuro para garantir legibilidade */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/80 via-[#0a0a1a]/70 to-[#0f0f13]/80" />
+                </div>
+                <div className=" relative max-w-7xl mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
@@ -379,7 +390,7 @@ const MoviesPage = () => {
                     {isSearching && searchQuery && (
                         <div className="mb-4 flex items-center gap-2 text-sm text-indigo-400">
                             <SearchIcon className="w-4 h-4" />
-                            <span>Resultados para: "{searchQuery}"</span>
+                            <span>Resultados para: {searchQuery}</span>
                             <button
                                 onClick={clearSearch}
                                 className="ml-2 text-gray-400 hover:text-white"

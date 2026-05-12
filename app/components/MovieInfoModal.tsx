@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, Calendar, Star, Info, Film, Clock } from 'lucide-react';
+import { Calendar, Star, Info, Film, Clock } from 'lucide-react';
 
 interface Genre {
     id: number;
@@ -25,11 +25,24 @@ interface MovieInfoModalProps {
     onWatch: () => void;
 }
 
+
+type Movie = {
+    id: number;
+    title: string;
+    poster_path: string;
+    backdrop_path?: string;
+    overview?: string;
+    release_date?: string;
+    vote_average?: number;
+    vote_count?: number;
+    genre_ids?: number[];
+    runtime?: number;
+}
+
 const MovieInfoModal = ({ movie, onClose, onWatch }: MovieInfoModalProps) => {
     const [genres, setGenres] = useState<Genre[]>([]);
     const [loadingGenres, setLoadingGenres] = useState(true);
-    const [movieDetails, setMovieDetails] = useState<any>(null);
-
+    const [movieDetails, setMovieDetails] = useState<Movie | null>(null);
     // Buscar gêneros
     useEffect(() => {
         const fetchGenres = async () => {

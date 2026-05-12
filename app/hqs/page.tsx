@@ -65,8 +65,6 @@ const ComicsPage = () => {
         'Dynamite Entertainment',
     ];
 
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
 
     const fetchComics = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) {
@@ -107,6 +105,7 @@ const ComicsPage = () => {
 
             setTotalPages(data.total_pages);
             setTotalResults(data.total_results);
+            console.log(totalResults)
             setCurrentPage(page);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao buscar HQs');
@@ -118,7 +117,9 @@ const ComicsPage = () => {
     }, [searchQuery, isSearching, sortBy, selectedPublisher]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
+
         fetchComics(1, false);
     }, [fetchComics]);
 
@@ -191,15 +192,21 @@ const ComicsPage = () => {
         <>
             <Navbar />
 
-            <div className="min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20">
-                <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
+                <div className="fixed inset-0 z-0">
+                    <img
+                        src="/backgroud.jpg"
+                        alt="Universo"
+                        className="w-full h-full object-cover opacity-30"
+                    />
+                    {/* Overlay escuro para garantir legibilidade */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/80 via-[#0a0a1a]/70 to-[#0f0f13]/80" />
+                </div>
+                <div className="relative max-w-7xl mx-auto px-4 py-8">
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                             HQs 📚
                         </h1>
-                        <p className="text-gray-400">
-                            {totalResults > 0 && `${totalResults} HQs encontradas`}
-                        </p>
                     </div>
 
                     <div className="mb-8 space-y-4">

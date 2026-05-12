@@ -29,62 +29,52 @@ const VideoPlayer = ({
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    /**
-     * Construir URL do WarezCdn no formato correto
-     * - Filmes: https://warezcdn.site/filme/ID_DO_FILME?autoplay=1
-     * - Séries: https://warezcdn.site/serie/ID_TMDB?autoplay=1
-     */
-    const buildWarezCdnUrl = (): string => {
-        // Verificar se é série (tem tvId OU season/episode OU é explicitamente TV)
-        const isSerie = !!(tvId || (season !== undefined && episode !== undefined));
-        const isMovie = !!movieId;
 
-        let identifier: string | number | undefined;
-        let type = '';
-
-        if (isSerie) {
-            // Prioridade para séries: tvId > imdbId
-            identifier = tvId || imdbId;
-            type = 'serie';
-            setContentType('Série');
-        } else if (isMovie) {
-            // Para filmes: movieId > imdbId
-            identifier = movieId || imdbId;
-            type = 'filme';
-            setContentType('Filme');
-        } else if (imdbId) {
-            // Fallback: se só tem imdbId, tenta como filme primeiro
-            identifier = imdbId;
-            type = 'filme';
-            setContentType('Filme (IMDb)');
-        }
-
-        if (!identifier) {
-            throw new Error('Nenhum identificador foi fornecido (movieId, tvId ou imdbId)');
-        }
-
-        // Monta a URL base conforme o tipo
-        let url = `https://warezcdn.site/${type}/${identifier}`;
-
-        // Adiciona autoplay como parâmetro
-        if (autoPlay) {
-            url += `?autoplay=1`;
-        }
-
-        // Log para debug
-        console.log(`WarezCdn URL gerada: ${url} (${contentType})`);
-
-        return url;
-    };
-
-// Carregar URL do player
     useEffect(() => {
-        const url = buildWarezCdnUrl();
+        const buildWarezCdnUrl = (): string => {
 
-        // Só atualiza se a URL realmente mudou
-        if (url !== playerUrl) {
-            setPlayerUrl(url);
-        }
+            const isSerie = !!(tvId || (season !== undefined && episode !== undefined));
+            const isMovie = !!movieId;
+
+            let identifier: string | number | undefined;
+            let type = '';
+
+            if (isSerie) {
+                identifier = tvId || imdbId;
+                type = 'serie';
+                setContentType('Série');
+            } else if (isMovie) {
+                // Para filmes: movieId > imdbId
+                identifier = movieId || imdbId;
+                type = 'filme';
+                setContentType('Filme');
+            } else if (imdbId) {
+                identifier = imdbId;
+                type = 'filme';
+                setContentType('Filme (IMDb)');
+            }
+
+            if (!identifier) {
+                throw new Error('Nenhum identificador foi fornecido (movieId, tvId ou imdbId)');
+            }
+
+            // Monta a URL base conforme o tipo
+            let url = `https://warezcdn.site/${type}/${identifier}`;
+
+            // Adiciona autoplay como parâmetro
+            if (autoPlay) {
+                url += `?autoplay=1`;
+            }
+
+            return url;
+        };
+
+        const url = buildWarezCdnUrl();
+        console.log(contentType)
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPlayerUrl(url);
+
     }, [movieId, tvId, imdbId, autoPlay, season, episode]);
 
 
@@ -107,8 +97,6 @@ const VideoPlayer = ({
                         allow="autoplay *; encrypted-media *; picture-in-picture *; fullscreen *; clipboard-write *; accelerometer *; gyroscope *"
                         allowFullScreen
                         className="w-full h-full"
-                        frameBorder="0"
-                        scrolling="no"
                         style={{
                             width: '100%',
                             height: '100%',

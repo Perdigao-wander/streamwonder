@@ -24,7 +24,7 @@ interface TVShowsGridProps {
     limit?: number;
 }
 
-const TVShowsGrid = ({ category = 'airing_today', limit = 10 }: TVShowsGridProps) => {
+const TVShowsGrid = ({ category = 'popular', limit = 10 }: TVShowsGridProps) => {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -35,50 +35,50 @@ const TVShowsGrid = ({ category = 'airing_today', limit = 10 }: TVShowsGridProps
     const [showEpisodeSelector, setShowEpisodeSelector] = useState(false);
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
-    // Fetch séries baseado na categoria
-    const fetchTVShows = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            let endpoint = '';
-            switch (category) {
-                case 'popular':
-                    endpoint = '/api/tv/popular';
-                    break;
-                case 'top_rated':
-                    endpoint = '/api/tv/top-rated';
-                    break;
-                case 'airing_today':
-                    endpoint = '/api/tv/airing-today';
-                    break;
-                case 'on_the_air':
-                    endpoint = '/api/tv/on-the-air';
-                    break;
-                default:
-                    endpoint = '/api/tv/popular';
-            }
-
-            const response = await fetch(endpoint);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            // Limitar número de resultados
-            setShows(data.slice(0, limit));
-        } catch (error) {
-            setError(error instanceof Error ? error.message : 'Erro ao buscar séries');
-            console.error('Erro ao buscar séries:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [category, limit]);
+    // Remova o useCallback e a função fetchTVShows externa
 
     useEffect(() => {
+        const fetchTVShows = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                let endpoint = '';
+                switch (category) {
+                    case 'popular':
+                        endpoint = '/api/tv/popular';
+                        break;
+                    case 'top_rated':
+                        endpoint = '/api/tv/top-rated';
+                        break;
+                    case 'airing_today':
+                        endpoint = '/api/tv/airing-today';
+                        break;
+                    case 'on_the_air':
+                        endpoint = '/api/tv/on-the-air';
+                        break;
+                    default:
+                        endpoint = '/api/tv/popular';
+                }
+
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setShows(data.slice(0, limit));
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Erro ao buscar séries');
+                console.error('Erro ao buscar séries:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchTVShows();
-    }, [fetchTVShows]);
+    }, [category, limit]); // ✅ Dependências diretas
 
     // Handler para assistir série
     const handleWatchShow = useCallback((show: TVShow, season?: number, episode?: number, event?: React.MouseEvent | React.TouchEvent) => {
@@ -146,7 +146,6 @@ const TVShowsGrid = ({ category = 'airing_today', limit = 10 }: TVShowsGridProps
                 <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500 mb-4">Erro: {error}</p>
                 <button
-                    onClick={fetchTVShows}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                     Tentar Novamente

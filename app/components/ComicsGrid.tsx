@@ -49,50 +49,48 @@ const ComicsGrid = ({ category = 'recent', limit = 10 }: ComicsGridProps) => {
     const [showModal, setShowModal] = useState(false);
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
-    // Buscar HQs baseado na categoria
-    const fetchComics = useCallback(async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            let endpoint = '';
-            switch (category) {
-                case 'recent':
-                    endpoint = '/api/comics/issues?sort=cover_date:desc';
-                    break;
-                case 'popular':
-                    endpoint = '/api/comics/issues?sort=cover_date:desc';
-                    break;
-                case 'marvel':
-                    endpoint = '/api/comics/issues?filter=publisher:Marvel';
-                    break;
-                case 'dc':
-                    endpoint = '/api/comics/issues?filter=publisher:DC%20Comics';
-                    break;
-                default:
-                    endpoint = '/api/comics/issues?sort=cover_date:desc';
-            }
-
-            const response = await fetch(endpoint);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            // Limitar número de resultados
-            setComics(data.results?.slice(0, limit) || []);
-        } catch (error) {
-            setError(error instanceof Error ? error.message : 'Erro ao buscar HQs');
-            console.error('Erro ao buscar HQs:', error);
-        } finally {
-            setLoading(false);
-        }
-    }, [category, limit]);
-
     useEffect(() => {
+        const fetchComics = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                let endpoint = '';
+                switch (category) {
+                    case 'recent':
+                        endpoint = '/api/comics/issues?sort=cover_date:desc';
+                        break;
+                    case 'popular':
+                        endpoint = '/api/comics/issues?sort=cover_date:desc';
+                        break;
+                    case 'marvel':
+                        endpoint = '/api/comics/issues?filter=publisher:Marvel';
+                        break;
+                    case 'dc':
+                        endpoint = '/api/comics/issues?filter=publisher:DC%20Comics';
+                        break;
+                    default:
+                        endpoint = '/api/comics/issues?sort=cover_date:desc';
+                }
+
+                const response = await fetch(endpoint);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setComics(data.results?.slice(0, limit) || []);
+            } catch (error) {
+                setError(error instanceof Error ? error.message : 'Erro ao buscar HQs');
+                console.error('Erro ao buscar HQs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchComics();
-    }, [fetchComics]);
+    }, [category, limit]);
 
     // Handler para abrir modal da HQ
     const handleOpenComic = useCallback((comic: ComicIssue, event?: React.MouseEvent | React.TouchEvent) => {
@@ -175,7 +173,6 @@ const ComicsGrid = ({ category = 'recent', limit = 10 }: ComicsGridProps) => {
                 <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                 <p className="text-red-500 mb-4">Erro: {error}</p>
                 <button
-                    onClick={fetchComics}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
                     Tentar Novamente
