@@ -6,6 +6,7 @@ type TVShow = {
     poster_path: string;
     backdrop_path: string;
     overview: string;
+    adult: boolean;
     first_air_date: string;
     vote_average: string;
 }
@@ -28,7 +29,9 @@ export async function GET() {
         const data = await response.json();
 
         // Retorna apenas os dados necessários
-        const tvShows = data.results.map((show: TVShow) => ({
+        const tvShows = data.results
+            .filter((movie: TVShow) => !movie.adult)
+            .map((show: TVShow) => ({
             id: show.id,
             title: show.name, // Usando 'title' para consistência com a interface Movie
             name: show.name,

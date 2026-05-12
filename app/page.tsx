@@ -1,14 +1,17 @@
 'use client';
 
-import { Suspense } from 'react';
+import React, { Suspense } from 'react';
 import Navbar from '@/app/components/Navbar';
 import Hero from '@/app/components/Hero';
 import LoadingSkeleton from '@/app/components/LoadingSkeleton';
 import MoviesGrid from '@/app/components/MoviesGrid';
 import TVShowsGrid from "@/app/components/TVShowsGrid";
-import {ChevronRight, PlayCircle} from "lucide-react";
+import {ChevronRight, Drama, Film, JapaneseYen, PlayCircle, Tv} from "lucide-react";
 import Link from "next/link";
 import ComicsGrid from "@/app/components/ComicsGrid";
+import DoramasGrid from "@/app/components/DoramasGrid";
+import {GiOpenBook} from "react-icons/gi";
+import AnimeGrid from "@/app/components/AnimeGrid";
 
 export default function Home() {
   return (
@@ -38,8 +41,9 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                                    Filmes Recentes 🎬
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+                                    Filmes Recentes
+                                    <Film className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
                                 </h2>
                             </div>
 
@@ -61,8 +65,9 @@ export default function Home() {
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                                    Séries 📺
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+                                    Séries
+                                    <Tv className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
                                 </h2>
                             </div>
 
@@ -78,14 +83,59 @@ export default function Home() {
                         <TVShowsGrid/>
                     </section>
 
+                    <section className="max-w-7xl mx-auto px-4 py-12">
+                        {/* Header com título e botão "Ver mais" */}
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+                                    Doramas
+                                    <Drama className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                                </h2>
+                            </div>
+
+                            <Link
+                                href="/dorama"
+                                className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
+                            >
+                                <span>Ver todos</span>
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                            </Link>
+                        </div>
+
+                        <DoramasGrid/>
+                    </section>
+
+                    {/*  Seção de Animes */}
+                    <section className="max-w-7xl mx-auto px-4 py-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+                                    Animes
+                                    <JapaneseYen className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                                </h2>
+                            </div>
+                            <Link
+                                href="/animes"
+                                className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
+                            >
+                                <span>Ver todos</span>
+                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                            </Link>
+                        </div>
+                        <AnimeGrid category="popular" limit={10} />
+                    </section>
+
                     {/* Seção de HQs Populares */}
                     <section className="max-w-7xl mx-auto px-4 py-12">
                         {/* Header com título e botão "Ver mais" */}
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-3">
                                 <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-white">
-                                    HQs 📚
+                                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+                                    HQs
+                                    <GiOpenBook className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
                                 </h2>
                             </div>
 

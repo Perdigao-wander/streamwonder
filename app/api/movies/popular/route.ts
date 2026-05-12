@@ -4,13 +4,14 @@ type Movie = {
     id: string;
     title: string;
     poster_path: string;
+    adult: boolean;
     backdrop_path: string;
     overview: string;
     release_date: string;
     vote_average: string;
 }
 
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
+const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 export async function GET() {
@@ -27,19 +28,21 @@ export async function GET() {
 
         const data = await response.json();
 
-        // Retorna apenas os dados necessários
-        const movies = data.results.map((movie: Movie) => ({
-            id: movie.id,
-            title: movie.title,
-            poster_path: movie.poster_path,
-            backdrop_path: movie.backdrop_path,
-            overview: movie.overview,
-            release_date: movie.release_date,
-            vote_average: movie.vote_average,
-        }));
+        const movies = data.results
+            .filter((movie: Movie) => !movie.adult)
+            .map((movie: Movie) => ({
+                id: movie.id,
+                title: movie.title,
+                poster_path: movie.poster_path,
+                backdrop_path: movie.backdrop_path,
+                overview: movie.overview,
+                release_date: movie.release_date,
+                vote_average: movie.vote_average,
+            }));
 
         return NextResponse.json(movies);
     } catch (error) {
+        console.error('Erro ao buscar filmes:', error);
         return NextResponse.json({ error: 'Erro ao buscar filmes' }, { status: 500 });
     }
 }

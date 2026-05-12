@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, PlayCircle, BookOpen, Film, Tv, Home, ChevronRight } from 'lucide-react';
+import { Menu, X, PlayCircle, BookOpen, Film, Tv, Home, Drama, JapaneseYen  } from 'lucide-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -31,8 +31,10 @@ const Navbar = () => {
 
     const navLinks = [
         { href: '/', label: 'Início', icon: Home },
-        { href: '/series', label: 'Séries', icon: Tv },
         { href: '/movies', label: 'Filmes', icon: Film },
+        { href: '/series', label: 'Séries', icon: Tv },
+        { href: '/dorama', label: 'Doramas', icon: Drama },
+        { href: '/animes', label: 'Animes', icon: JapaneseYen }, // Ou use um ícone específico
         { href: '/hqs', label: 'HQs', icon: BookOpen },
     ];
 

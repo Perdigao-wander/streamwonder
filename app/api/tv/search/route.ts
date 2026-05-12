@@ -9,6 +9,7 @@ type Serie = {
     title: string;
     name: string;
     poster_path: string;
+    adult: boolean;
     backdrop_path: string;
     overview: string;
     first_air_date: string;
@@ -38,7 +39,9 @@ export async function GET(request: NextRequest) {
 
         const data = await response.json();
 
-        const series = data.results.map((serie: Serie) => ({
+        const series = data.results
+            .filter((movie: Serie) => !movie.adult)
+            .map((serie: Serie) => ({
             id: serie.id,
             title: serie.name,
             name: serie.name,

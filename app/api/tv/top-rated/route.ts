@@ -6,6 +6,7 @@ type Show = {
     poster_path: string;
     backdrop_path: string;
     overview: string;
+    adult: boolean;
     first_air_date: string;
     release_date: string;
     vote_average: string;
@@ -17,7 +18,7 @@ const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 export async function GET() {
     try {
         const response = await fetch(
-            `${TMDB_BASE_URL}/tv/top_rated?language=pt-BR`,
+            `${TMDB_BASE_URL}/tv/top_rated?language=pt-BR&include_adult=false`,
             {
                 headers: {
                     Authorization: `Bearer ${TMDB_TOKEN}`,
@@ -28,7 +29,9 @@ export async function GET() {
 
         const data = await response.json();
 
-        const tvShows = data.results.map((show: Show) => ({
+        const tvShows = data.results
+            .filter((movie: Show) => !movie.adult)
+            .map((show: Show) => ({
             id: show.id,
             title: show.name,
             name: show.name,

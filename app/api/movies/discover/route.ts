@@ -10,6 +10,7 @@ type Movie = {
     poster_path: string;
     backdrop_path: string;
     overview: string;
+    adult: boolean;
     release_date: string;
     vote_count: string;
     popularity: string;
@@ -45,12 +46,15 @@ export async function GET(request: NextRequest) {
 
         const data = await response.json();
 
-        const movies = data.results.map((movie: Movie) => ({
+        const movies = data.results
+            .filter((movie: Movie) => !movie.adult)
+            .map((movie: Movie) => ({
             id: movie.id,
             title: movie.title,
             poster_path: movie.poster_path,
             backdrop_path: movie.backdrop_path,
             overview: movie.overview,
+            adult: movie.adult,
             release_date: movie.release_date,
             vote_average: movie.vote_average,
             vote_count: movie.vote_count,

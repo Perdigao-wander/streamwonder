@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, Tv} from 'lucide-react';
+import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, JapaneseYen} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import VideoPlayer from '@/app/components/VideoPlayer';
 import SeriesInfoModal from '@/app/components/SeriesInfoModal';
@@ -23,10 +23,12 @@ interface TVShow {
     vote_count?: number;
     popularity?: number;
     genre_ids?: number[];
+    origin_country?: string[];
+    original_language?: string;
 }
 
-const TVSeriesPage = () => {
-    const [series, setSeries] = useState<TVShow[]>([]);
+const AnimesPage = () => {
+    const [animes, setAnimes] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -82,7 +84,7 @@ const TVSeriesPage = () => {
         fetchGenres();
     }, []);
 
-    const fetchSeries = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
+    const fetchAnimes = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) {
             setLoadingMore(true);
         } else {
@@ -101,6 +103,9 @@ const TVSeriesPage = () => {
                 url = '/api/tv/discover';
                 queryParams.append('page', page.toString());
                 queryParams.append('sort_by', sortBy);
+                // Filtro específico para Animes (Japão)
+                queryParams.append('with_origin_country', 'JP');
+
                 if (selectedGenres.length > 0) {
                     queryParams.append('with_genres', selectedGenres.join(','));
                 }
@@ -119,19 +124,24 @@ const TVSeriesPage = () => {
                 throw new Error(data.error);
             }
 
+            const results = data.results || data;
+            const animesList = results.filter((show: TVShow) =>
+                show.origin_country?.includes('JP') ||
+                show.original_language === 'ja'
+            );
+
             if (isLoadMore) {
-                setSeries(prev => [...prev, ...data.results]);
+                setAnimes(prev => [...prev, ...animesList]);
             } else {
-                setSeries(data.results);
+                setAnimes(animesList);
             }
 
-            setTotalPages(data.total_pages);
-            setTotalResults(data.total_results);
-            console.log(totalResults)
+            setTotalPages(data.total_pages || Math.ceil(animesList.length / 20));
+            setTotalResults(data.total_results || animesList.length);
             setCurrentPage(page);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Erro ao buscar séries');
-            console.error('Erro:', error);
+            setError(err instanceof Error ? err.message : 'Erro ao buscar animes');
+            console.error('Erro:', err);
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -142,9 +152,9 @@ const TVSeriesPage = () => {
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-
-        fetchSeries(1, false);
-    }, [fetchSeries]);
+        
+        fetchAnimes(1, false);
+    }, [fetchAnimes]);
 
     // Função para executar a busca
     const performSearch = () => {
@@ -171,7 +181,7 @@ const TVSeriesPage = () => {
     // Buscar ao mudar de página
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
-            fetchSeries(newPage, false);
+            fetchAnimes(newPage, false);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
@@ -179,7 +189,7 @@ const TVSeriesPage = () => {
     // Carregar mais (infinite scroll)
     const loadMore = () => {
         if (currentPage < totalPages && !loadingMore) {
-            fetchSeries(currentPage + 1, true);
+            fetchAnimes(currentPage + 1, true);
         }
     };
 
@@ -240,22 +250,23 @@ const TVSeriesPage = () => {
     return (
         <>
             <Navbar />
-            <div className=" relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
+            <div className="relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
+                {/* Background image */}
                 <div className="fixed inset-0 z-0">
                     <img
                         src="/backgroud.jpg"
                         alt="Universo"
                         className="w-full h-full object-cover opacity-30"
                     />
-                    {/* Overlay escuro para garantir legibilidade */}
                     <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/80 via-[#0a0a1a]/70 to-[#0f0f13]/80" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 py-8">
+
+                <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2">
-                            Séries
-                            <Tv className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                            Animes
+                            <JapaneseYen className="text-3xl md:text-4xl text-indigo-500"/>
                         </h1>
                     </div>
 
@@ -267,7 +278,7 @@ const TVSeriesPage = () => {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
                                     type="text"
-                                    placeholder="Buscar séries por nome..."
+                                    placeholder="Buscar animes por nome..."
                                     value={tempSearchQuery}
                                     onChange={(e) => setTempSearchQuery(e.target.value)}
                                     onKeyPress={handleKeyPress}
@@ -406,9 +417,9 @@ const TVSeriesPage = () => {
                         </div>
                     )}
 
-                    {/* Grid de séries */}
+                    {/* Grid de animes */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                        {series.map((show) => (
+                        {animes.map((show) => (
                             <div
                                 key={show.id}
                                 className="group cursor-pointer transition-transform duration-300 hover:scale-105"
@@ -457,6 +468,11 @@ const TVSeriesPage = () => {
                                             </span>
                                         </div>
                                     )}
+
+                                    {/* Badge de origem - Japão */}
+                                    <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
+                                        <span className="text-orange-400 text-xs">🇯🇵</span>
+                                    </div>
                                 </div>
 
                                 <h3 className="text-white font-semibold mt-2 truncate text-sm md:text-base">
@@ -540,12 +556,12 @@ const TVSeriesPage = () => {
                     )}
 
                     {/* Empty state */}
-                    {series.length === 0 && !loading && (
+                    {animes.length === 0 && !loading && (
                         <div className="text-center py-12">
                             <div className="text-gray-400 mb-4">
                                 {isSearching
-                                    ? `Nenhuma série encontrada para "${searchQuery}".`
-                                    : 'Nenhuma série encontrada com os filtros selecionados.'}
+                                    ? `Nenhum anime encontrado para "${searchQuery}".`
+                                    : 'Nenhum anime encontrado com os filtros selecionados.'}
                             </div>
                             <button
                                 onClick={clearFilters}
@@ -573,7 +589,7 @@ const TVSeriesPage = () => {
                 />
             )}
 
-            {/* Modal de Informações da Série */}
+            {/* Modal de Informações */}
             {showInfoModal && selectedInfoShow && (
                 <SeriesInfoModal
                     show={selectedInfoShow}
@@ -591,4 +607,4 @@ const TVSeriesPage = () => {
     );
 };
 
-export default TVSeriesPage;
+export default AnimesPage;

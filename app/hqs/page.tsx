@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Filter, X, ChevronLeft, ChevronRight, SearchIcon, Info } from 'lucide-react';
+import {Search, Filter, X, ChevronLeft, ChevronRight, SearchIcon, Info, BookOpen} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import ComicInfoModal from '@/app/components/ComicInfoModal';
 
@@ -204,8 +204,9 @@ const ComicsPage = () => {
                 </div>
                 <div className="relative max-w-7xl mx-auto px-4 py-8">
                     <div className="mb-8">
-                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                            HQs 📚
+                        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2">
+                            HQs
+                            <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-indigo-500" />
                         </h1>
                     </div>
 
@@ -232,14 +233,14 @@ const ComicsPage = () => {
                             </div>
                             <button
                                 onClick={performSearch}
-                                className="px-6 py-3 rounded-xl transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                                className="px-6 py-3 cursor-pointer rounded-xl transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                             >
                                 <SearchIcon className="w-5 h-5" />
                                 Pesquisar
                             </button>
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
-                                className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-2 ${
+                                className={`px-4 py-3 cursor-pointer rounded-xl transition-colors flex items-center gap-2 ${
                                     showFilters || selectedPublisher || selectedYear
                                         ? 'bg-indigo-600 text-white'
                                         : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
