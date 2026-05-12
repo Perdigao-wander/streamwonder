@@ -8,10 +8,8 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        // Aguardar a resolução do params (Next.js 15+)
         const { id } = await params;
 
-        // Busca detalhes do filme no TMDb
         const movieResponse = await fetch(
             `${TMDB_BASE_URL}/movie/${id}?language=pt-BR`,
             {

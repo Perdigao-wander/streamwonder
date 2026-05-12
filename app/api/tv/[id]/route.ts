@@ -91,15 +91,14 @@ const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> } // ✅ Alterado para Promise
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        // ✅ Aguardar a resolução do params (Next.js 15+)
         const { id } = await params;
 
         // Busca detalhes da série
         const response = await fetch(
-            `${TMDB_BASE_URL}/tv/${id}?language=pt-BR`, // ✅ Usar id após await
+            `${TMDB_BASE_URL}/tv/${id}?language=pt-BR`,
             {
                 headers: {
                     Authorization: `Bearer ${TMDB_TOKEN}`,
