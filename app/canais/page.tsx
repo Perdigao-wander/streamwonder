@@ -363,93 +363,190 @@ const ChannelsPage = () => {
                     {/* Filtros */}
                     <div className="mb-8 space-y-4">
                         <div className="flex flex-col sm:flex-row gap-4">
-                            {/* Busca */}
-                            <div className="flex-1 relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                                <input
-                                    type="text"
-                                    placeholder="Buscar canais por nome..."
-                                    value={tempSearchQuery}
-                                    onChange={(e) => setTempSearchQuery(e.target.value)}
-                                    onKeyPress={handleKeyPress}
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
-                                />
-                                {tempSearchQuery && (
+                            {/* Layout para mobile */}
+                            <div className="block sm:hidden w-full">
+                                {/* Campo de pesquisa em cima */}
+                                <div className="relative mb-4">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar canais por nome..."
+                                        value={tempSearchQuery}
+                                        onChange={(e) => setTempSearchQuery(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                                    />
+                                    {tempSearchQuery && (
+                                        <button
+                                            onClick={clearSearch}
+                                            className="absolute cursor-pointer right-3 top-1/2 transform -translate-y-1/2"
+                                        >
+                                            <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Botões embaixo - grid 2 colunas */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    {/* Botão Pesquisar */}
                                     <button
-                                        onClick={clearSearch}
-                                        className="absolute cursor-pointer right-3 top-1/2 transform -translate-y-1/2"
+                                        onClick={handleSearch}
+                                        className="px-4 py-3 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
                                     >
-                                        <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                                        <Search className="w-5 h-5" />
+                                        Pesquisar
+                                    </button>
+
+                                    {/* Dropdown de categorias */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                                            className={`w-full px-4 py-3 cursor-pointer rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                                selectedCategory
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                                            }`}
+                                        >
+                                            <Filter className="w-5 h-5" />
+                                            <span className="truncate">{selectedCategoryName || 'Categorias'}</span>
+                                            <ChevronDown className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        {showCategoryDropdown && (
+                                            <>
+                                                <div
+                                                    className="fixed inset-0 z-10"
+                                                    onClick={() => setShowCategoryDropdown(false)}
+                                                />
+                                                <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 rounded-xl border border-gray-700 shadow-xl z-20 max-h-80 overflow-y-auto">
+                                                    <button
+                                                        onClick={() => handleCategorySelect(null)}
+                                                        className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                            !selectedCategory ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
+                                                        }`}
+                                                    >
+                                                        Todas as categorias
+                                                    </button>
+                                                    {safeCategories.map((category) => (
+                                                        <button
+                                                            key={category.id}
+                                                            onClick={() => handleCategorySelect(category.id)}
+                                                            className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                                selectedCategory === category.id ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
+                                                            }`}
+                                                        >
+                                                            {category.name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Botão limpar filtros - ocupa as 2 colunas quando visível */}
+                                    {(selectedCategory || searchQuery || isSearching) && (
+                                        <button
+                                            onClick={clearFilters}
+                                            className="col-span-2 px-5 py-3 cursor-pointer rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <X className="w-5 h-5" />
+                                            Limpar filtros
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Layout para desktop (mantém o original) */}
+                            <div className="hidden sm:flex sm:flex-row gap-4 w-full">
+                                {/* Busca */}
+                                <div className="flex-1 relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar canais por nome..."
+                                        value={tempSearchQuery}
+                                        onChange={(e) => setTempSearchQuery(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                                    />
+                                    {tempSearchQuery && (
+                                        <button
+                                            onClick={clearSearch}
+                                            className="absolute cursor-pointer right-3 top-1/2 transform -translate-y-1/2"
+                                        >
+                                            <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Botão Pesquisar */}
+                                <button
+                                    onClick={handleSearch}
+                                    className="px-6 py-3 rounded-xl cursor-pointer transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                                >
+                                    <Search className="w-5 h-5" />
+                                    Pesquisar
+                                </button>
+
+                                {/* Dropdown de categorias */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+                                        className={`px-5 py-3 cursor-pointer rounded-xl transition-colors flex items-center gap-2 ${
+                                            selectedCategory
+                                                ? 'bg-indigo-600 text-white'
+                                                : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                                        }`}
+                                    >
+                                        <Filter className="w-5 h-5" />
+                                        {selectedCategoryName || 'Todas as categorias'}
+                                        <ChevronDown className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {showCategoryDropdown && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setShowCategoryDropdown(false)}
+                                            />
+                                            <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 rounded-xl border border-gray-700 shadow-xl z-20 max-h-80 overflow-y-auto">
+                                                <button
+                                                    onClick={() => handleCategorySelect(null)}
+                                                    className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                        !selectedCategory ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
+                                                    }`}
+                                                >
+                                                    Todas as categorias
+                                                </button>
+                                                {safeCategories.map((category) => (
+                                                    <button
+                                                        key={category.id}
+                                                        onClick={() => handleCategorySelect(category.id)}
+                                                        className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                            selectedCategory === category.id ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
+                                                        }`}
+                                                    >
+                                                        {category.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Botão limpar filtros */}
+                                {(selectedCategory || searchQuery || isSearching) && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="px-5 py-3 cursor-pointer rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        Limpar filtros
                                     </button>
                                 )}
                             </div>
-
-                            {/* Botão Pesquisar */}
-                            <button
-                                onClick={handleSearch}
-                                className="px-6 py-3 rounded-xl cursor-pointer transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
-                            >
-                                <Search className="w-5 h-5" />
-                                Pesquisar
-                            </button>
-
-                            {/* Dropdown de categorias */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                    className={`px-5 py-3 cursor-pointer rounded-xl transition-colors flex items-center gap-2 ${
-                                        selectedCategory
-                                            ? 'bg-indigo-600 text-white'
-                                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
-                                    }`}
-                                >
-                                    <Filter className="w-5 h-5" />
-                                    {selectedCategoryName || 'Todas as categorias'}
-                                    <ChevronDown className={`w-4 h-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} />
-                                </button>
-
-                                {showCategoryDropdown && (
-                                    <>
-                                        <div
-                                            className="fixed inset-0 z-10"
-                                            onClick={() => setShowCategoryDropdown(false)}
-                                        />
-                                        <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 rounded-xl border border-gray-700 shadow-xl z-20 max-h-80 overflow-y-auto">
-                                            <button
-                                                onClick={() => handleCategorySelect(null)}
-                                                className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
-                                                    !selectedCategory ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
-                                                }`}
-                                            >
-                                                Todas as categorias
-                                            </button>
-                                            {safeCategories.map((category) => (
-                                                <button
-                                                    key={category.id}
-                                                    onClick={() => handleCategorySelect(category.id)}
-                                                    className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
-                                                        selectedCategory === category.id ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
-                                                    }`}
-                                                >
-                                                    {category.name}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-
-                            {/* Botão limpar filtros */}
-                            {(selectedCategory || searchQuery || isSearching) && (
-                                <button
-                                    onClick={clearFilters}
-                                    className="px-5 py-3 cursor-pointer rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
-                                >
-                                    <X className="w-5 h-5" />
-                                    Limpar filtros
-                                </button>
-                            )}
                         </div>
+
                     </div>
 
                     {/* Loading indicator */}

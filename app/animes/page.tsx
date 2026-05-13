@@ -268,8 +268,60 @@ const AnimesPage = () => {
 
                     {/* Barra de busca e filtros */}
                     <div className="mb-8 space-y-4">
-                        {/* Busca */}
-                        <div className="flex gap-4">
+
+                        {/* Layout para mobile */}
+                        <div className="block md:hidden">
+                            {/* Campo de pesquisa em cima */}
+                            <div className="relative mb-4">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar animes por nome..."
+                                    value={tempSearchQuery}
+                                    onChange={(e) => setTempSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                    className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
+                                />
+                                {tempSearchQuery && (
+                                    <button
+                                        onClick={clearSearch}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                                    >
+                                        <X className="w-5 h-5 text-gray-400 hover:text-white" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Botões embaixo, um ao lado do outro */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={performSearch}
+                                    className="flex-1 px-4 py-3 rounded-xl cursor-pointer transition-colors flex items-center justify-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                                >
+                                    <SearchIcon className="w-5 h-5" />
+                                    Pesquisar
+                                </button>
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className={`flex-1 px-4 py-3 cursor-pointer rounded-xl transition-colors flex items-center justify-center gap-2 ${
+                                        showFilters || selectedGenres.length > 0 || selectedYear || minRating
+                                            ? 'bg-indigo-600 text-white'
+                                            : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <Filter className="w-5 h-5" />
+                                    Filtros
+                                    {(selectedGenres.length > 0 || selectedYear || minRating) && (
+                                        <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
+                    {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+                </span>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Layout para desktop (mantém o original) */}
+                        <div className="hidden md:flex gap-4">
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
@@ -308,12 +360,11 @@ const AnimesPage = () => {
                                 Filtros
                                 {(selectedGenres.length > 0 || selectedYear || minRating) && (
                                     <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                                        {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
-                                    </span>
+                {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+            </span>
                                 )}
                             </button>
                         </div>
-
                         {/* Filtros expandidos */}
                         {showFilters && (
                             <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
