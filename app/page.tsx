@@ -5,7 +5,7 @@ import Hero from '@/app/components/Hero';
 import LoadingSkeleton from '@/app/components/LoadingSkeleton';
 import MoviesGrid from '@/app/components/MoviesGrid';
 import TVShowsGrid from "@/app/components/TVShowsGrid";
-import {ChevronRight, Drama, Film, JapaneseYen, Satellite} from "lucide-react";
+import {ChevronRight, Drama, Film, JapaneseYen, Satellite,Tv} from "lucide-react";
 import Link from "next/link";
 import ComicsGrid from "@/app/components/ComicsGrid";
 import DoramasGrid from "@/app/components/DoramasGrid";
@@ -58,7 +58,7 @@ export default function Home() {
                                     <div className="w-1 h-8 bg-indigo-500 rounded-full"></div>
                                     <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
                                         Séries
-                                        <Satellite className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                                        <Tv className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
                                     </h2>
                                 </div>
                                 <Link
