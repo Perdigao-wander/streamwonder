@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ScrollToTop from "@/app/components/ScrollToTop";
 import Footer from "@/app/components/Footer";
+import Navbar from "@/app/components/Navbar";
+import React from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -122,6 +124,7 @@ export default function RootLayout({
 
       {/* Main content */}
       <main id="main-content" className="flex-1">
+        <Navbar />
         {children}
         <ScrollToTop />
         <Footer/>

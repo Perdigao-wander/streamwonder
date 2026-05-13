@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import Navbar from '@/app/components/Navbar';
 import Hero from '@/app/components/Hero';
 import LoadingSkeleton from '@/app/components/LoadingSkeleton';
 import MoviesGrid from '@/app/components/MoviesGrid';
@@ -26,7 +25,6 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/90 via-[#0a0a1a]/100 to-[#0f0f13]/80" />
             </div>
             <div className="relative z-10">
-                <Navbar />
                 <main>
                     <Suspense fallback={<LoadingSkeleton />}>
                         <Hero />
