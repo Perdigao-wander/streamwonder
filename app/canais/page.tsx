@@ -37,9 +37,7 @@ const ChannelsPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
-    // Função para verificar se um canal é adulto
     const isAdultChannel = (channel: Channel): boolean => {
-        // Verificar categoria
         if (BLOCKED_CATEGORIES.some(cat =>
             channel.category?.toLowerCase().includes(cat)
         )) {
