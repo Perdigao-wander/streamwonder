@@ -124,11 +124,7 @@ const DoramasPage = () => {
                 throw new Error(data.error);
             }
 
-            const results = data.results || data;
-            const doramasList = results.filter((show: TVShow) =>
-                show.origin_country?.includes('KR') ||
-                show.original_language === 'ko'
-            );
+            const doramasList = data.results || data;
 
             if (isLoadMore) {
                 setDoramas(prev => [...prev, ...doramasList]);
@@ -498,7 +494,7 @@ const DoramasPage = () => {
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 bg-gray-800 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
+                                className="px-4 py-2 cursor-pointer bg-gray-800 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
@@ -520,7 +516,7 @@ const DoramasPage = () => {
                                         <button
                                             key={pageNum}
                                             onClick={() => handlePageChange(pageNum)}
-                                            className={`w-10 h-10 rounded-lg transition-colors ${
+                                            className={`w-10 h-10 cursor-pointer rounded-lg transition-colors ${
                                                 currentPage === pageNum
                                                     ? 'bg-indigo-600 text-white'
                                                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -535,7 +531,7 @@ const DoramasPage = () => {
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 bg-gray-800 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
+                                className="px-4 py-2 bg-gray-800 cursor-pointer rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                             >
                                 <ChevronRight className="w-5 h-5" />
                             </button>

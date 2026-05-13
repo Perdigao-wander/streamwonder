@@ -6,10 +6,7 @@ export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ category: string }> }
 ) {
-    const searchParams = request.nextUrl.searchParams;
     const { category } = await params;
-    const limit = searchParams.get('limit') || '50';
-
     try {
         // Mapeamento de categorias para os IDs corretos
         const categoryMap: Record<string, string> = {
@@ -38,7 +35,7 @@ export async function GET(
             return NextResponse.json({ error: 'Categoria inválida' }, { status: 400 });
         }
 
-        const url = `${WAREZCDN_API}?category=canais&format=json&genre=${genreId}&limit=${limit}`;
+        const url = `${WAREZCDN_API}?category=canais&genre=${genreId}&format=json`;
         const response = await fetch(url);
         const data = await response.json();
 

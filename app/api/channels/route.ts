@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
-// Categorias bloqueadas (adulto e conteúdo sensível)
+
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex'];
 
@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const genre = searchParams.get('genre');
     const query = searchParams.get('q');
     const limit = searchParams.get('limit') || '200';
+
 
     try {
         let url = `${WAREZCDN_API}?category=canais&format=json&limit=${limit}`;
@@ -21,6 +22,8 @@ export async function GET(request: NextRequest) {
         if (genre) {
             url += `&genre=${encodeURIComponent(genre)}`;
         }
+        console.log(url)
+
 
         const response = await fetch(url);
         const data = await response.json();

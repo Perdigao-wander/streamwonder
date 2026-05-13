@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
 
 // Categorias bloqueadas
-const BLOCKED_CATEGORIES = ['adulto', 'adult', '24-horas']; // 24-horas pode conter conteúdo adulto
+const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-do-patrao' ];
 
 export async function GET() {
     try {

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Satellite, X, Loader2, AlertCircle, Monitor, Filter, ChevronDown } from 'lucide-react';
+import { Search, Satellite, X, Loader2, AlertCircle, Monitor, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import ChannelPlayer from '@/app/components/ChannelPlayer';
 
@@ -20,22 +20,31 @@ interface Channel {
     is_active: boolean;
 }
 
-// Palavras-chave para bloquear conteúdo adulto (camada extra de segurança)
-const BLOCKED_CATEGORIES = ['adulto', 'adult', '24-horas'];
+// Palavras-chave para bloquear conteúdo adulto
+const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex', 'jennylive'];
+
+const ITEMS_PER_PAGE = 24;
 
 const ChannelsPage = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [allChannels, setAllChannels] = useState<Channel[]>([]);
     const [filteredChannels, setFilteredChannels] = useState<Channel[]>([]);
+    const [paginatedChannels, setPaginatedChannels] = useState<Channel[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [loadingChannels, setLoadingChannels] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [tempSearchQuery, setTempSearchQuery] = useState(''); // Valor temporário para o input
+    const [isSearching, setIsSearching] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
     const [showPlayer, setShowPlayer] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+
+    // Paginação
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const isAdultChannel = (channel: Channel): boolean => {
         if (BLOCKED_CATEGORIES.some(cat =>
@@ -43,25 +52,19 @@ const ChannelsPage = () => {
         )) {
             return true;
         }
-
-        // Verificar nome
         if (BLOCKED_KEYWORDS.some(keyword =>
             channel.name?.toLowerCase().includes(keyword)
         )) {
             return true;
         }
-
-        // Verificar ID
         if (BLOCKED_KEYWORDS.some(keyword =>
             channel.id?.toLowerCase().includes(keyword)
         )) {
             return true;
         }
-
         return false;
     };
 
-    // Buscar categorias (já filtradas pela API)
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -78,13 +81,12 @@ const ChannelsPage = () => {
                 console.error('Erro:', err);
             }
         };
-
         fetchCategories();
     }, []);
 
-    // Buscar canais (todos ou por categoria) - já filtrados pela API
     const fetchChannels = async (categoryId?: string | null) => {
         setLoadingChannels(true);
+        setCurrentPage(1);
         try {
             let url = '/api/channels?limit=200';
 
@@ -108,7 +110,6 @@ const ChannelsPage = () => {
                     'series': 'series',
                     'variedades': 'variedades',
                 };
-
                 const genreId = categoryMap[categoryId];
                 if (genreId) {
                     url = `/api/channels?genre=${genreId}&limit=200`;
@@ -119,7 +120,6 @@ const ChannelsPage = () => {
             const data = await response.json();
 
             if (data.channels) {
-                // Filtro extra de segurança no frontend
                 const safeChannels = data.channels.filter((channel: Channel) => !isAdultChannel(channel));
                 setFilteredChannels(safeChannels);
                 if (!categoryId) {
@@ -140,34 +140,77 @@ const ChannelsPage = () => {
         }
     };
 
+    // Buscar canais por nome via API
+    const searchChannelsByName = async (query: string) => {
+        if (!query.trim()) {
+            setIsSearching(false);
+            fetchChannels(selectedCategory);
+            return;
+        }
+
+        setLoadingChannels(true);
+        setCurrentPage(1);
+        setIsSearching(true);
+
+        try {
+            const url = `/api/channels?q=${encodeURIComponent(query)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (data.channels) {
+                const safeChannels = data.channels.filter((channel: Channel) => !isAdultChannel(channel));
+                setFilteredChannels(safeChannels);
+                setAllChannels(safeChannels);
+            } else {
+                setFilteredChannels([]);
+                setAllChannels([]);
+            }
+        } catch (err) {
+            console.error('Erro na busca:', err);
+            setFilteredChannels([]);
+        } finally {
+            setLoadingChannels(false);
+        }
+    };
+
     // Buscar todos os canais inicialmente
     useEffect(() => {
-
         // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchChannels(null);
     }, []);
 
-    // Quando a categoria mudar, buscar canais novamente
     useEffect(() => {
         if (selectedCategory !== undefined && selectedCategory !== 'adulto') {
 
             // eslint-disable-next-line react-hooks/set-state-in-effect
+            setIsSearching(false);
+            setTempSearchQuery('');
+            setSearchQuery('');
             fetchChannels(selectedCategory);
         }
     }, [selectedCategory]);
 
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setPaginatedChannels(filteredChannels.slice(startIndex, endIndex));
+        setTotalPages(Math.ceil(filteredChannels.length / ITEMS_PER_PAGE));
+    }, [filteredChannels, currentPage]);
+
     const handleCategorySelect = (categoryId: string | null) => {
-        // Impedir seleção de categoria adulta
         if (categoryId && BLOCKED_CATEGORIES.includes(categoryId)) {
             return;
         }
         setSelectedCategory(categoryId);
+        setTempSearchQuery('');
         setSearchQuery('');
+        setIsSearching(false);
         setShowCategoryDropdown(false);
     };
 
     const handleChannelClick = (channel: Channel) => {
-        // Verificar novamente se não é adulto antes de reproduzir
         if (isAdultChannel(channel)) {
             return;
         }
@@ -175,36 +218,84 @@ const ChannelsPage = () => {
         setShowPlayer(true);
     };
 
+    const handleSearch = () => {
+        setSearchQuery(tempSearchQuery);
+        searchChannelsByName(tempSearchQuery);
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
+    const clearSearch = () => {
+        setTempSearchQuery('');
+        setSearchQuery('');
+        setIsSearching(false);
+        fetchChannels(selectedCategory);
+    };
+
     const clearFilters = () => {
         setSelectedCategory(null);
+        setTempSearchQuery('');
         setSearchQuery('');
+        setIsSearching(false);
         setShowCategoryDropdown(false);
+        setCurrentPage(1);
         fetchChannels(null);
     };
 
-    // Filtrar por busca local
-    useEffect(() => {
-        if (searchQuery && allChannels.length > 0 && !selectedCategory) {
-            const query = searchQuery.toLowerCase();
-            const filtered = allChannels.filter(channel =>
-                channel.name.toLowerCase().includes(query) && !isAdultChannel(channel)
-            );
-
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setFilteredChannels(filtered);
-        } else if (searchQuery && selectedCategory) {
-            const query = searchQuery.toLowerCase();
-            setFilteredChannels(prev =>
-                prev.filter(channel =>
-                    channel.name.toLowerCase().includes(query) && !isAdultChannel(channel)
-                )
-            );
-        } else if (!searchQuery && !selectedCategory && allChannels.length > 0) {
-            setFilteredChannels(allChannels);
+    // Navegação de páginas
+    const goToPage = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }, [searchQuery, allChannels, selectedCategory]);
+    };
 
-    // Filtrar categorias para exibição (remover adultas)
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            goToPage(currentPage - 1);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+        }
+    };
+
+    // Gerar números de página para exibição
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            if (currentPage <= 3) {
+                for (let i = 1; i <= 4; i++) pages.push(i);
+                pages.push(-1);
+                pages.push(totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1);
+                pages.push(-1);
+                for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                pages.push(-1);
+                for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+                pages.push(-1);
+                pages.push(totalPages);
+            }
+        }
+        return pages;
+    };
+
+    // Filtrar categorias para exibição
     const safeCategories = categories.filter(cat =>
         !BLOCKED_CATEGORIES.includes(cat.id) &&
         !cat.name.toLowerCase().includes('adult')
@@ -245,8 +336,8 @@ const ChannelsPage = () => {
         );
     }
 
-    // Obter nome da categoria selecionada
     const selectedCategoryName = safeCategories.find(c => c.id === selectedCategory)?.name;
+    const pageNumbers = getPageNumbers();
 
     return (
         <>
@@ -262,6 +353,11 @@ const ChannelsPage = () => {
                         <p className="text-gray-400">
                             {loadingChannels ? 'Carregando...' : `${filteredChannels.length} canais disponíveis`}
                         </p>
+                        {isSearching && searchQuery && (
+                            <p className="text-indigo-400 text-sm mt-2">
+                                Resultados para: {searchQuery}
+                            </p>
+                        )}
                     </div>
 
                     {/* Filtros */}
@@ -273,25 +369,35 @@ const ChannelsPage = () => {
                                 <input
                                     type="text"
                                     placeholder="Buscar canais por nome..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    value={tempSearchQuery}
+                                    onChange={(e) => setTempSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
                                     className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 transition-colors"
                                 />
-                                {searchQuery && (
+                                {tempSearchQuery && (
                                     <button
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                                        onClick={clearSearch}
+                                        className="absolute cursor-pointer right-3 top-1/2 transform -translate-y-1/2"
                                     >
                                         <X className="w-5 h-5 text-gray-400 hover:text-white" />
                                     </button>
                                 )}
                             </div>
 
+                            {/* Botão Pesquisar */}
+                            <button
+                                onClick={handleSearch}
+                                className="px-6 py-3 rounded-xl cursor-pointer transition-colors flex items-center gap-2 bg-indigo-600 text-white hover:bg-indigo-700"
+                            >
+                                <Search className="w-5 h-5" />
+                                Pesquisar
+                            </button>
+
                             {/* Dropdown de categorias */}
                             <div className="relative">
                                 <button
                                     onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                    className={`px-5 py-3 rounded-xl transition-colors flex items-center gap-2 ${
+                                    className={`px-5 py-3 cursor-pointer rounded-xl transition-colors flex items-center gap-2 ${
                                         selectedCategory
                                             ? 'bg-indigo-600 text-white'
                                             : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
@@ -311,7 +417,7 @@ const ChannelsPage = () => {
                                         <div className="absolute top-full left-0 mt-2 w-64 bg-gray-900 rounded-xl border border-gray-700 shadow-xl z-20 max-h-80 overflow-y-auto">
                                             <button
                                                 onClick={() => handleCategorySelect(null)}
-                                                className={`w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
                                                     !selectedCategory ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
                                                 }`}
                                             >
@@ -321,7 +427,7 @@ const ChannelsPage = () => {
                                                 <button
                                                     key={category.id}
                                                     onClick={() => handleCategorySelect(category.id)}
-                                                    className={`w-full text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
+                                                    className={`w-full cursor-pointer text-left px-4 py-3 hover:bg-gray-800 transition-colors ${
                                                         selectedCategory === category.id ? 'text-indigo-400 bg-gray-800/50' : 'text-gray-300'
                                                     }`}
                                                 >
@@ -334,10 +440,10 @@ const ChannelsPage = () => {
                             </div>
 
                             {/* Botão limpar filtros */}
-                            {(selectedCategory || searchQuery) && (
+                            {(selectedCategory || searchQuery || isSearching) && (
                                 <button
                                     onClick={clearFilters}
-                                    className="px-5 py-3 rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                    className="px-5 py-3 cursor-pointer rounded-xl bg-gray-700 text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
                                 >
                                     <X className="w-5 h-5" />
                                     Limpar filtros
@@ -351,57 +457,100 @@ const ChannelsPage = () => {
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
                         </div>
-                    ) : filteredChannels.length > 0 ? (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                            {filteredChannels.map((channel) => (
-                                <div
-                                    key={channel.id}
-                                    onClick={() => handleChannelClick(channel)}
-                                    className="group cursor-pointer"
-                                >
-                                    <div className="bg-gray-800/50 hover:bg-indigo-600/20 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all duration-300 overflow-hidden">
-                                        {/* Logo do canal */}
-                                        <div className="aspect-video bg-gray-900 flex items-center justify-center p-4">
-                                            {channel.logo_url ? (
-                                                <img
-                                                    src={channel.logo_url}
-                                                    alt={channel.name}
-                                                    className="max-w-full max-h-full object-contain"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                    }}
-                                                />
-                                            ) : (
-                                                <div className="w-12 h-12 rounded-lg bg-indigo-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                    <Monitor className="w-6 h-6 text-indigo-500" />
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Informações do canal */}
-                                        <div className="p-3 border-t border-gray-700">
-                                            <h3 className="text-white font-medium text-sm truncate">
-                                                {channel.name}
-                                            </h3>
-                                            <p className="text-gray-500 text-xs mt-1 truncate">
-                                                {channel.category || 'Canal'}
-                                            </p>
+                    ) : paginatedChannels.length > 0 ? (
+                        <>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                {paginatedChannels.map((channel) => (
+                                    <div
+                                        key={channel.id}
+                                        onClick={() => handleChannelClick(channel)}
+                                        className="group cursor-pointer"
+                                    >
+                                        <div className="bg-gray-800/50 hover:bg-indigo-600/20 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all duration-300 overflow-hidden">
+                                            <div className="aspect-video bg-gray-900 flex items-center justify-center p-4">
+                                                {channel.logo_url ? (
+                                                    <img
+                                                        src={channel.logo_url}
+                                                        alt={channel.name}
+                                                        className="max-w-full max-h-full object-contain"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-12 h-12 rounded-lg bg-indigo-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                        <Monitor className="w-6 h-6 text-indigo-500" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-3 border-t border-gray-700">
+                                                <h3 className="text-white font-medium text-sm truncate">
+                                                    {channel.name}
+                                                </h3>
+                                                <p className="text-gray-500 text-xs mt-1 truncate">
+                                                    {channel.category || 'Canal'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
+                                ))}
+                            </div>
+
+                            {/* Paginação */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
+                                    <button
+                                        onClick={goToPrevPage}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-2 cursor-pointer rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+
+                                    {pageNumbers.map((page, index) => (
+                                        page === -1 ? (
+                                            <span key={`separator-${index}`} className="px-2 text-gray-500">...</span>
+                                        ) : (
+                                            <button
+                                                key={page}
+                                                onClick={() => goToPage(page)}
+                                                className={`min-w-[40px] cursor-pointer h-10 px-3 rounded-lg transition-colors ${
+                                                    currentPage === page
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                {page}
+                                            </button>
+                                        )
+                                    ))}
+
+                                    <button
+                                        onClick={goToNextPage}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-2 cursor-pointer rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
                                 </div>
-                            ))}
-                        </div>
+                            )}
+
+                            {/* Informação de página */}
+                            <div className="text-center mt-4 text-gray-500 text-sm">
+                                Página {currentPage} de {totalPages} • {filteredChannels.length} canais no total
+                            </div>
+                        </>
                     ) : (
                         <div className="text-center py-12">
                             <Satellite className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                             <p className="text-gray-400 mb-4">
-                                {searchQuery
+                                {isSearching && searchQuery
                                     ? `Nenhum canal encontrado para "${searchQuery}"`
                                     : selectedCategory
                                         ? `Nenhum canal disponível na categoria "${selectedCategoryName}"`
                                         : 'Nenhum canal disponível'}
                             </p>
-                            {(searchQuery || selectedCategory) && (
+                            {(isSearching || selectedCategory) && (
                                 <button
                                     onClick={clearFilters}
                                     className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
