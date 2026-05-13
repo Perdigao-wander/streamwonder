@@ -33,7 +33,7 @@ const Navbar = () => {
         { href: '/', label: 'Início', icon: Home },
         { href: '/movies', label: 'Filmes', icon: Film },
         { href: '/series', label: 'Séries', icon: Tv },
-        { href: '/dorama', label: 'Doramas', icon: Drama },
+        { href: '/doramas', label: 'Doramas', icon: Drama },
         { href: '/animes', label: 'Animes', icon: JapaneseYen }, // Ou use um ícone específico
         { href: '/canais', label: 'Canais', icon: Satellite },
         { href: '/hqs', label: 'HQs', icon: BookOpen },
