@@ -76,7 +76,7 @@ StreamWonder é uma aplicação web desenvolvida como estudo prático de tecnolo
 
 1. **Clone o repositório**
 ```bash
-git clone https://github.com/seu-usuario/streamwonder.git
+git clone https://github.com/Perdigao-wander/streamwonder.git
 cd streamwonder
 ```
 
