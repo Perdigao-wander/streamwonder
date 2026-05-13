@@ -125,12 +125,18 @@ const ChannelPlayer = ({ channelId, channelName, embedUrl, onClose }: ChannelPla
                     </div>
                 )}
 
-                {/* Iframe Player */}
+                {/* Iframe Player com altura definida */}
                 <iframe
                     ref={iframeRef}
                     src={channelUrl}
                     className="w-full rounded-xl"
-                    style={{ aspectRatio: '16/9', minHeight: '400px' }}
+                    style={{
+                        width: '100%',
+                        height: '70vh',
+                        minHeight: '480px',
+                        maxHeight: '80vh',
+                        border: 'none'
+                    }}
                     onLoad={() => setIsLoading(false)}
                     onError={() => {
                         setIsLoading(false);
