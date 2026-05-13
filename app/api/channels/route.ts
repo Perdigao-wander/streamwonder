@@ -22,9 +22,6 @@ export async function GET(request: NextRequest) {
         if (genre) {
             url += `&genre=${encodeURIComponent(genre)}`;
         }
-        console.log(url)
-
-
         const response = await fetch(url);
         const data = await response.json();
 
