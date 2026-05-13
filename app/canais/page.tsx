@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Tv, Radio, X, Loader2, AlertCircle, Monitor, Filter, ChevronDown } from 'lucide-react';
+import { Search, Satellite, X, Loader2, AlertCircle, Monitor, Filter, ChevronDown } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import ChannelPlayer from '@/app/components/ChannelPlayer';
 
@@ -257,7 +257,7 @@ const ChannelsPage = () => {
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2">
                             Canais de TV
-                            <Tv className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                            <Satellite className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
                         </h1>
                         <p className="text-gray-400">
                             {loadingChannels ? 'Carregando...' : `${filteredChannels.length} canais disponíveis`}
@@ -393,7 +393,7 @@ const ChannelsPage = () => {
                         </div>
                     ) : (
                         <div className="text-center py-12">
-                            <Tv className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                            <Satellite className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                             <p className="text-gray-400 mb-4">
                                 {searchQuery
                                     ? `Nenhum canal encontrado para "${searchQuery}"`
