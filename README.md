@@ -123,8 +123,6 @@ bun dev
 - Abra http://localhost:3000
 - Explore as funcionalidades
 
-
-## 📁 Estrutura do Projeto
 ## 📁 Estrutura do Projeto
 
 ```bash
