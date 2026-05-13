@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Movie {
@@ -22,6 +22,14 @@ const Hero = () => {
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [direction, setDirection] = useState<'left' | 'right'>('right');
 
+    // Variáveis para suporte a touch
+    const touchStartX = useRef<number>(0);
+    const touchEndX = useRef<number>(0);
+    const [isTouching, setIsTouching] = useState(false);
+
+    // Referência para o container do hero
+    const heroContainerRef = useRef<HTMLDivElement>(null);
+
     const handlePrevSlide = () => {
         if (isTransitioning) return;
         setDirection('left');
@@ -36,7 +44,7 @@ const Hero = () => {
         }, 500);
 
         setIsAutoPlaying(false);
-        setTimeout(() => setIsAutoPlaying(true), 500);
+        setTimeout(() => setIsAutoPlaying(true), 5000);
     };
 
     const handleNextSlide = () => {
@@ -53,7 +61,7 @@ const Hero = () => {
         }, 500);
 
         setIsAutoPlaying(false);
-        setTimeout(() => setIsAutoPlaying(true), 500);
+        setTimeout(() => setIsAutoPlaying(true), 5000);
     };
 
     const goToSlide = (index: number) => {
@@ -72,6 +80,43 @@ const Hero = () => {
         setTimeout(() => setIsAutoPlaying(true), 10000);
     };
 
+    // Handlers para touch mobile
+    const handleTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+        setIsTouching(true);
+        // Pausar auto-play durante interação
+        setIsAutoPlaying(false);
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!isTouching) return;
+        touchEndX.current = e.touches[0].clientX;
+    };
+
+    const handleTouchEnd = () => {
+        setIsTouching(false);
+
+        const swipeDistance = touchEndX.current - touchStartX.current;
+        const minSwipeDistance = 50; // Distância mínima para considerar swipe
+
+        if (Math.abs(swipeDistance) > minSwipeDistance) {
+            if (swipeDistance > 0) {
+                // Swipe para direita - slide anterior
+                handlePrevSlide();
+            } else {
+                // Swipe para esquerda - próximo slide
+                handleNextSlide();
+            }
+        }
+
+        // Reset valores
+        touchStartX.current = 0;
+        touchEndX.current = 0;
+
+        // Retomar auto-play após 5 segundos sem interação
+        setTimeout(() => setIsAutoPlaying(true), 5000);
+    };
+
     // Buscar filmes populares
     useEffect(() => {
         const fetchPopularMovies = async () => {
@@ -88,17 +133,16 @@ const Hero = () => {
         fetchPopularMovies();
     }, []);
 
-
     // Auto-play do carrossel
     useEffect(() => {
-        if (!isAutoPlaying || movies.length === 0) return;
+        if (!isAutoPlaying || movies.length === 0 || isTransitioning) return;
 
         const interval = setInterval(() => {
             handleNextSlide();
         }, 8000);
 
         return () => clearInterval(interval);
-    }, [isAutoPlaying, movies.length]);
+    }, [isAutoPlaying, movies.length, isTransitioning]);
 
     if (loading) {
         return (
@@ -117,7 +161,13 @@ const Hero = () => {
     const year = currentMovie.release_date?.split('-')[0] || 'Em breve';
 
     return (
-        <div className="relative h-[40vh] md:h-[80vh] w-full overflow-hidden group">
+        <div
+            ref={heroContainerRef}
+            className="relative h-[40vh] md:h-[80vh] w-full overflow-hidden group"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
             {/* Container de imagens com efeito de transição */}
             <div className="absolute inset-0 overflow-hidden">
                 {/* Imagem atual */}
@@ -134,6 +184,7 @@ const Hero = () => {
                         src={`https://image.tmdb.org/t/p/original${currentMovie.backdrop_path}`}
                         alt={currentMovie.title}
                         className="w-full h-full object-cover object-center"
+                        draggable={false}
                     />
                 </div>
 
@@ -154,6 +205,7 @@ const Hero = () => {
                             src={`https://image.tmdb.org/t/p/original${nextMovie.backdrop_path}`}
                             alt={nextMovie.title}
                             className="w-full h-full object-cover object-center"
+                            draggable={false}
                         />
                     </div>
                 )}
@@ -162,6 +214,7 @@ const Hero = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
+
             </div>
 
             {/* Conteúdo com animação de fade e slide */}
@@ -176,7 +229,7 @@ const Hero = () => {
                     </div>
 
                     {/* Título com animação */}
-                    <h1 className="text-3xl md:text-6xl lg:text-7xl font-black text-white max-w-2xl leading-tight mt-4 animate-fade-in-up animation-delay-200">
+                    <h1 className="text-2xl md:text-6xl lg:text-7xl font-black text-white max-w-2xl leading-tight mt-4 animate-fade-in-up animation-delay-200">
                         {currentMovie.title}
                     </h1>
 
@@ -195,17 +248,17 @@ const Hero = () => {
                     </div>
 
                     {/* Descrição com animação */}
-                    <p className="text-gray-300 text-sm md:text-lg max-w-xl line-clamp-3 md:line-clamp-4 mt-4 animate-fade-in-up animation-delay-400">
+                    <p className="text-gray-300 text-sm md:text-lg max-w-xl line-clamp-2 md:line-clamp-4 mt-4 animate-fade-in-up animation-delay-400">
                         {currentMovie.overview || 'Sinopse não disponível.'}
                     </p>
                 </div>
             </div>
 
-            {/* Botões de navegação com efeito de hover melhorado */}
+            {/* Botões de navegação - Desktop */}
             <button
                 onClick={handlePrevSlide}
                 disabled={isTransitioning}
-                className="absolute cursor-pointer left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-indigo-600/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed hidden md:block z-20"
+                className="absolute cursor-pointer left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-indigo-600/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed hidden md:flex z-20"
                 aria-label="Slide anterior"
             >
                 <ChevronLeft className="w-6 h-6" />
@@ -214,14 +267,14 @@ const Hero = () => {
             <button
                 onClick={handleNextSlide}
                 disabled={isTransitioning}
-                className="absolute right-4 cursor-pointer top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-indigo-600/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed hidden md:block z-20"
+                className="absolute right-4 cursor-pointer top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/50 hover:bg-indigo-600/80 text-white opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:shadow-lg disabled:opacity-30 disabled:cursor-not-allowed hidden md:flex z-20"
                 aria-label="Próximo slide"
             >
                 <ChevronRight className="w-6 h-6" />
             </button>
 
-            {/* Indicadores de slide com animação */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {/* Indicadores de slide com animação - Adaptado para mobile */}
+            <div className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-2 z-20">
                 {movies.map((_, index) => (
                     <button
                         key={index}
@@ -229,15 +282,15 @@ const Hero = () => {
                         disabled={isTransitioning}
                         className={`transition-all duration-500 rounded-full ${
                             currentSlide === index
-                                ? 'w-10 h-2 bg-indigo-500 shadow-lg shadow-indigo-500/50'
-                                : 'w-2 h-2 bg-white/40 hover:bg-white/80 hover:scale-125'
+                                ? 'w-6 md:w-10 h-1.5 md:h-2 bg-indigo-500 shadow-lg shadow-indigo-500/50'
+                                : 'w-1.5 md:w-2 h-1.5 md:h-2 bg-white/40 hover:bg-white/80 hover:scale-125'
                         } ${isTransitioning ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                         aria-label={`Ir para slide ${index + 1}`}
                     />
                 ))}
             </div>
 
-            {/* Indicador de auto-play */}
+            {/* Indicador de auto-play - Desktop apenas */}
             <div
                 className="absolute bottom-6 right-4 text-white/60 text-xs hidden md:flex items-center gap-2 z-20 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-full cursor-pointer hover:bg-black/70 transition-all duration-300"
                 onClick={() => setIsAutoPlaying(!isAutoPlaying)}
