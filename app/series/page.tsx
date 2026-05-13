@@ -411,6 +411,7 @@ const TVSeriesPage = () => {
                         {series.map((show) => (
                             <div
                                 key={show.id}
+                                onClick={() => handleWatchShow(show, 1, 1)}
                                 className="group cursor-pointer transition-transform duration-300 hover:scale-105"
                             >
                                 <div className="relative rounded-xl overflow-hidden bg-gray-900">
@@ -422,7 +423,6 @@ const TVSeriesPage = () => {
                                         alt={show.title}
                                         className="w-full aspect-[2/3] object-cover"
                                         loading="lazy"
-                                        onClick={() => handleWatchShow(show, 1, 1)}
                                     />
 
                                     {/* Overlay com botões */}

@@ -24,7 +24,7 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/90 via-[#0a0a1a]/100 to-[#0f0f13]/80" />
             </div>
-            <div className="relative z-10">
+            <div className="relative">
                 <main>
                     <Suspense fallback={<LoadingSkeleton />}>
                         <Hero />
@@ -153,7 +153,7 @@ export default function Home() {
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                                 </Link>
                             </div>
-                            <ChannelsGrid limit={12} />
+                            <ChannelsGrid limit={10} />
                         </section>
                     </div>
                 </main>

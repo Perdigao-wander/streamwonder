@@ -122,7 +122,7 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
 
     return (
         <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {channels.map((channel) => (
                     <div
                         key={channel.id}
@@ -131,7 +131,7 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
                     >
                         <div className="bg-gray-800/50 hover:bg-indigo-600/20 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all duration-300 overflow-hidden">
                             {/* Logo do canal */}
-                            <div className="aspect-video bg-gray-900 flex items-center justify-center p-4">
+                            <div className="aspect-video bg-black/20 flex items-center justify-center p-4">
                                 {channel.logo_url ? (
                                     <img
                                         src={channel.logo_url}

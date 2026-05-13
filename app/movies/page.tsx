@@ -406,6 +406,7 @@ const MoviesPage = () => {
                         {movies.map((movie) => (
                             <div
                                 key={movie.id}
+                                onClick={() => handleWatchMovie(movie)}
                                 className="group cursor-pointer transition-transform duration-300 hover:scale-105"
                             >
                                 <div className="relative rounded-xl overflow-hidden bg-gray-900">
@@ -417,7 +418,6 @@ const MoviesPage = () => {
                                         alt={movie.title}
                                         className="w-full aspect-[2/3] object-cover"
                                         loading="lazy"
-                                        onClick={() => handleWatchMovie(movie)}
                                     />
 
                                     {/* Overlay com botões */}
