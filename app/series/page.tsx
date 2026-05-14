@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, Tv} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/VideoPlayer';
+import VideoPlayer from '@/app/components/video-player/index';
 import SeriesInfoModal from '@/app/components/SeriesInfoModal';
 
 interface Genre {
@@ -18,23 +18,39 @@ interface TVShow {
     poster_path: string;
     backdrop_path?: string;
     overview?: string;
+    imdb_id?: string | null;
     first_air_date?: string;
+    original_language?: string;
     vote_average?: number;
     vote_count?: number;
     popularity?: number;
     genre_ids?: number[];
+    origin_country?: string[];
+}
+
+interface TVShowWithDetails extends TVShow {
+    seasons?: {
+        id: number;
+        season_number: number;
+        name: string;
+        overview: string;
+        poster_path: string | null;
+        episode_count: number;
+        air_date: string | null;
+    }[];
 }
 
 const TVSeriesPage = () => {
     const [series, setSeries] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [tempSearchQuery, setTempSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedShow, setSelectedShow] = useState<TVShow | null>(null);
+    const [selectedShow, setSelectedShow] = useState<TVShowWithDetails | null>(null);
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedSeason, setSelectedSeason] = useState(1);
     const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -67,6 +83,21 @@ const TVSeriesPage = () => {
     // Anos disponíveis (últimos 50 anos)
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
+
+    // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
+    const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
+        try {
+            const response = await fetch(`/api/tv/${tvId}`);
+            if (!response.ok) {
+                throw new Error('Erro ao buscar detalhes da série');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Erro ao buscar detalhes da série:', error);
+            return null;
+        }
+    }, []);
 
     // Buscar gêneros
     useEffect(() => {
@@ -119,19 +150,20 @@ const TVSeriesPage = () => {
                 throw new Error(data.error);
             }
 
+            const seriesList = data.results || data;
+
             if (isLoadMore) {
-                setSeries(prev => [...prev, ...data.results]);
+                setSeries(prev => [...prev, ...seriesList]);
             } else {
-                setSeries(data.results);
+                setSeries(seriesList);
             }
 
-            setTotalPages(data.total_pages);
-            setTotalResults(data.total_results);
-            console.log(totalResults)
+            setTotalPages(data.total_pages || Math.ceil(seriesList.length / 20));
+            setTotalResults(data.total_results || seriesList.length);
             setCurrentPage(page);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Erro ao buscar séries');
-            console.error('Erro:', error);
+            console.error('Erro:', err);
         } finally {
             setLoading(false);
             setLoadingMore(false);
@@ -140,9 +172,7 @@ const TVSeriesPage = () => {
 
     // Executar busca quando os parâmetros mudarem
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-
         fetchSeries(1, false);
     }, [fetchSeries]);
 
@@ -201,13 +231,33 @@ const TVSeriesPage = () => {
         clearSearch();
     };
 
-    // Abrir player
-    const handleWatchShow = (show: TVShow, season: number = 1, episode: number = 1) => {
-        setSelectedShow(show);
+    // Abrir player - agora com busca de detalhes
+    const handleWatchShow = useCallback(async (show: TVShow, season: number = 1, episode: number = 1) => {
+        setIsLoadingDetails(true);
+
+        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
+        const seriesDetails = await fetchSeriesDetails(show.id);
+
+        if (seriesDetails) {
+            setSelectedShow({
+                ...show,
+                imdb_id: seriesDetails.imdb_id,
+                seasons: seriesDetails.seasons
+            });
+        } else {
+            // Fallback: usa apenas os dados básicos
+            setSelectedShow({
+                ...show,
+                imdb_id: null,
+                seasons: []
+            });
+        }
+
         setSelectedSeason(season);
         setSelectedEpisode(episode);
         setShowPlayer(true);
-    };
+        setIsLoadingDetails(false);
+    }, [fetchSeriesDetails]);
 
     // Abrir modal de informações
     const handleShowInfo = (show: TVShow, e: React.MouseEvent) => {
@@ -240,22 +290,22 @@ const TVSeriesPage = () => {
     return (
         <>
             <Navbar />
-            <div className=" relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
+            <div className="relative min-h-screen bg-gradient-to-b from-[#0a0a0c] to-[#0f0f13] pt-20 overflow-hidden">
                 <div className="fixed inset-0 z-0">
                     <img
                         src="/backgroud.jpg"
                         alt="Universo"
                         className="w-full h-full object-cover opacity-30"
                     />
-                    {/* Overlay escuro para garantir legibilidade */}
                     <div className="absolute inset-0 bg-gradient-to-b from-[#05050a]/80 via-[#0a0a1a]/70 to-[#0f0f13]/80" />
                 </div>
-                <div className="relative max-w-7xl mx-auto px-4 py-8">
+
+                <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2">
                             Séries
-                            <Tv className="w-7 h-7 md:w-10 md:h-10 text-indigo-500" />
+                            <Tv className="w-8 h-8 md:w-10 md:h-10 text-indigo-500" />
                         </h1>
                     </div>
 
@@ -263,7 +313,6 @@ const TVSeriesPage = () => {
                     <div className="mb-8 space-y-4">
                         {/* Layout para mobile */}
                         <div className="block md:hidden">
-                            {/* Campo de pesquisa em cima */}
                             <div className="relative mb-4">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                 <input
@@ -284,7 +333,6 @@ const TVSeriesPage = () => {
                                 )}
                             </div>
 
-                            {/* Botões embaixo, um ao lado do outro */}
                             <div className="flex gap-3">
                                 <button
                                     onClick={performSearch}
@@ -305,14 +353,14 @@ const TVSeriesPage = () => {
                                     Filtros
                                     {(selectedGenres.length > 0 || selectedYear || minRating) && (
                                         <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                    {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
-                </span>
+                                            {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+                                        </span>
                                     )}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Layout para desktop (mantém o original) */}
+                        {/* Layout para desktop */}
                         <div className="hidden md:flex gap-4">
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -352,8 +400,8 @@ const TVSeriesPage = () => {
                                 Filtros
                                 {(selectedGenres.length > 0 || selectedYear || minRating) && (
                                     <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
-            </span>
+                                        {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+                                    </span>
                                 )}
                             </button>
                         </div>
@@ -372,7 +420,6 @@ const TVSeriesPage = () => {
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {/* Ordenação */}
                                     <div>
                                         <label className="text-white text-sm block mb-2">Ordenar por</label>
                                         <select
@@ -388,7 +435,6 @@ const TVSeriesPage = () => {
                                         </select>
                                     </div>
 
-                                    {/* Ano */}
                                     <div>
                                         <label className="text-white text-sm block mb-2">Ano de estreia</label>
                                         <select
@@ -403,7 +449,6 @@ const TVSeriesPage = () => {
                                         </select>
                                     </div>
 
-                                    {/* Avaliação mínima */}
                                     <div>
                                         <label className="text-white text-sm block mb-2">Avaliação mínima</label>
                                         <select
@@ -420,7 +465,6 @@ const TVSeriesPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Gêneros */}
                                 <div className="mt-6">
                                     <label className="text-white text-sm block mb-2">Gêneros</label>
                                     <div className="flex flex-wrap gap-2">
@@ -457,12 +501,21 @@ const TVSeriesPage = () => {
                         </div>
                     )}
 
+                    {/* Loading indicator para detalhes */}
+                    {isLoadingDetails && (
+                        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                            <div className="bg-gray-900 rounded-lg p-6 flex items-center gap-3">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+                                <span className="text-white">Carregando detalhes...</span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Grid de séries */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                         {series.map((show) => (
                             <div
                                 key={show.id}
-                                onClick={() => handleWatchShow(show, 1, 1)}
                                 className="group cursor-pointer transition-transform duration-300 hover:scale-105"
                             >
                                 <div className="relative rounded-xl overflow-hidden bg-gray-900">
@@ -474,9 +527,9 @@ const TVSeriesPage = () => {
                                         alt={show.title}
                                         className="w-full aspect-[2/3] object-cover"
                                         loading="lazy"
+                                        onClick={() => handleWatchShow(show, 1, 1)}
                                     />
 
-                                    {/* Overlay com botões */}
                                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                                         <button
                                             className="bg-indigo-600 cursor-pointer rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform"
@@ -490,7 +543,6 @@ const TVSeriesPage = () => {
                                             </svg>
                                         </button>
 
-                                        {/* Botão de informações (i) */}
                                         <button
                                             className="bg-white/20 cursor-pointer backdrop-blur-sm rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform hover:bg-white/30"
                                             onClick={(e) => handleShowInfo(show, e)}
@@ -499,7 +551,6 @@ const TVSeriesPage = () => {
                                         </button>
                                     </div>
 
-                                    {/* Badge de nota */}
                                     {show.vote_average && show.vote_average > 0 && (
                                         <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                                             <Star className="w-3 h-3 text-yellow-500 fill-current" />
@@ -533,7 +584,7 @@ const TVSeriesPage = () => {
                             <button
                                 onClick={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className="px-4 py-2 cursor-pointer bg-gray-800 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
+                                className="px-4 py-2 bg-gray-800 cursor-pointer rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
@@ -570,7 +621,7 @@ const TVSeriesPage = () => {
                             <button
                                 onClick={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === totalPages}
-                                className="px-4 py-2 cursor-pointer bg-gray-800 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
+                                className="px-4 py-2 bg-gray-800 cursor-pointer rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors"
                             >
                                 <ChevronRight className="w-5 h-5" />
                             </button>
@@ -613,9 +664,11 @@ const TVSeriesPage = () => {
             {showPlayer && selectedShow && (
                 <VideoPlayer
                     tvId={selectedShow.id}
+                    imdbId={selectedShow.imdb_id}
                     title={selectedShow.title || selectedShow.name}
                     season={selectedSeason}
                     episode={selectedEpisode}
+                    seasons={selectedShow.seasons || []}
                     onClose={() => {
                         setShowPlayer(false);
                         setSelectedShow(null);

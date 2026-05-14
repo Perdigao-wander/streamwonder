@@ -358,7 +358,7 @@ const ComicsPage = () => {
                         <div className="mb-4 flex items-center gap-2 text-sm text-indigo-400">
                             <SearchIcon className="w-4 h-4" />
                             <span>Resultados para: {searchQuery}</span>
-                            <button onClick={clearSearch} className="ml-2 text-gray-400 hover:text-white">
+                            <button onClick={clearSearch} className="ml-2 cursor-pointer text-gray-400 hover:text-white">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>

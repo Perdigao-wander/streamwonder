@@ -57,18 +57,7 @@ type ProcessedSeason = {
     air_date: string | null;
 };
 
-// Tipo para o episódio processado
-type ProcessedEpisode = {
-    id: number;
-    episode_number: number;
-    name: string;
-    overview: string;
-    still_path: string | null;
-    runtime: number | null;
-    air_date: string | null;
-};
-
-// Tipo para a resposta final da API
+// Tipo para a resposta final da API (sem episódios para não sobrecarregar)
 type TVShowAPIResponse = {
     id: number;
     title: string;
@@ -83,7 +72,6 @@ type TVShowAPIResponse = {
     vote_average: number;
     genres: TMDBGenre[];
     seasons: ProcessedSeason[];
-    episodes: ProcessedEpisode[];
     media_type: 'tv';
     imdb_id: string | null;
 };
@@ -94,13 +82,17 @@ const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 // Função para buscar IMDb ID reutilizando o endpoint interno
 async function fetchImdbId(tvId: number): Promise<string | null> {
     try {
-        // Chama o endpoint interno de IMDb
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
         const imdbResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/tv/${tvId}/imdb`,
+            `${baseUrl}/api/tv/${tvId}/imdb`,
             {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                // Adiciona cache para não chamar repetidamente
+                next: { revalidate: 3600 } // Cache de 1 hora
             }
         );
 
@@ -125,7 +117,11 @@ export async function GET(
         const { id } = await params;
         const tvId = parseInt(id);
 
-        // Busca detalhes da série (sem external_ids para não duplicar chamadas)
+        if (isNaN(tvId)) {
+            return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+        }
+
+        // Busca detalhes da série
         const response = await fetch(
             `${TMDB_BASE_URL}/tv/${tvId}?language=pt-BR`,
             {
@@ -133,11 +129,15 @@ export async function GET(
                     Authorization: `Bearer ${TMDB_TOKEN}`,
                     'Content-Type': 'application/json',
                 },
+                next: { revalidate: 3600 } // Cache de 1 hora no Next.js
             }
         );
 
         if (!response.ok) {
-            return NextResponse.json({ error: 'Série não encontrada' }, { status: 404 });
+            if (response.status === 404) {
+                return NextResponse.json({ error: 'Série não encontrada' }, { status: 404 });
+            }
+            return NextResponse.json({ error: 'Erro ao buscar série' }, { status: response.status });
         }
 
         const data: TMDBTVShowResponse = await response.json();
@@ -147,43 +147,18 @@ export async function GET(
             return NextResponse.json({ error: 'Série não encontrada' }, { status: 404 });
         }
 
-        // Busca as temporadas
-        const seasons: ProcessedSeason[] = data.seasons.map((season: TMDBSeason) => ({
-            id: season.id,
-            season_number: season.season_number,
-            name: season.name,
-            overview: season.overview,
-            poster_path: season.poster_path,
-            episode_count: season.episode_count,
-            air_date: season.air_date
-        }));
-
-        // Busca os episódios da primeira temporada
-        let episodes: ProcessedEpisode[] = [];
-        if (data.seasons && data.seasons.length > 0) {
-            const firstSeason = data.seasons.find(s => s.season_number === 1);
-            if (firstSeason) {
-                const episodesResponse = await fetch(
-                    `${TMDB_BASE_URL}/tv/${tvId}/season/1?language=pt-BR`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${TMDB_TOKEN}`,
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const episodesData: TMDBEpisodesResponse = await episodesResponse.json();
-                episodes = episodesData.episodes?.map((ep: TMDBEpisode) => ({
-                    id: ep.id,
-                    episode_number: ep.episode_number,
-                    name: ep.name,
-                    overview: ep.overview,
-                    still_path: ep.still_path,
-                    runtime: ep.runtime,
-                    air_date: ep.air_date
-                })) || [];
-            }
-        }
+        // Processa as temporadas (filtra apenas temporadas com episódios)
+        const seasons: ProcessedSeason[] = data.seasons
+            .filter((season: TMDBSeason) => season.season_number > 0 && season.episode_count > 0)
+            .map((season: TMDBSeason) => ({
+                id: season.id,
+                season_number: season.season_number,
+                name: season.name || `Temporada ${season.season_number}`,
+                overview: season.overview || "Sinopse não disponível",
+                poster_path: season.poster_path,
+                episode_count: season.episode_count,
+                air_date: season.air_date
+            }));
 
         // Busca o IMDb ID reutilizando o endpoint específico
         const imdbId = await fetchImdbId(tvId);
@@ -192,7 +167,7 @@ export async function GET(
             id: data.id,
             title: data.name,
             name: data.name,
-            overview: data.overview,
+            overview: data.overview || "Sinopse não disponível",
             backdrop_path: data.backdrop_path,
             poster_path: data.poster_path,
             first_air_date: data.first_air_date,
@@ -202,16 +177,13 @@ export async function GET(
             vote_average: data.vote_average,
             genres: data.genres,
             seasons: seasons,
-            episodes: episodes,
             media_type: 'tv',
             imdb_id: imdbId,
         };
 
-        console.log(`✅ Série carregada: ${data.name} (TMDb: ${data.id}, IMDb: ${imdbId || 'N/A'})`);
-
         return NextResponse.json(responseData);
     } catch (error) {
         console.error('Erro ao buscar série:', error);
-        return NextResponse.json({ error: 'Erro ao buscar série' }, { status: 500 });
+        return NextResponse.json({ error: 'Erro interno ao buscar série' }, { status: 500 });
     }
 }

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, JapaneseYen} from 'lucide-react';
+import { Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, JapaneseYen } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/VideoPlayer';
+import VideoPlayer from '@/app/components/video-player/index';
 import SeriesInfoModal from '@/app/components/SeriesInfoModal';
 
 interface Genre {
@@ -27,16 +27,31 @@ interface TVShow {
     original_language?: string;
 }
 
+// Interface estendida para incluir detalhes da série
+interface TVShowWithDetails extends TVShow {
+    seasons?: {
+        id: number;
+        season_number: number;
+        name: string;
+        overview: string;
+        poster_path: string | null;
+        episode_count: number;
+        air_date: string | null;
+    }[];
+    imdb_id?: string | null;
+}
+
 const AnimesPage = () => {
     const [animes, setAnimes] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [tempSearchQuery, setTempSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedShow, setSelectedShow] = useState<TVShow | null>(null);
+    const [selectedShow, setSelectedShow] = useState<TVShowWithDetails | null>(null);
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedSeason, setSelectedSeason] = useState(1);
     const [selectedEpisode, setSelectedEpisode] = useState(1);
@@ -69,6 +84,21 @@ const AnimesPage = () => {
     // Anos disponíveis (últimos 50 anos)
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
+
+    // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
+    const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
+        try {
+            const response = await fetch(`/api/tv/${tvId}`);
+            if (!response.ok) {
+                throw new Error('Erro ao buscar detalhes da série');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Erro ao buscar detalhes da série:', error);
+            return null;
+        }
+    }, []);
 
     // Buscar gêneros
     useEffect(() => {
@@ -103,7 +133,7 @@ const AnimesPage = () => {
                 url = '/api/tv/discover';
                 queryParams.append('page', page.toString());
                 queryParams.append('sort_by', sortBy);
-
+                // Filtro específico para Animes (Japão)
                 queryParams.append('with_origin_country', 'JP');
 
                 if (selectedGenres.length > 0) {
@@ -146,9 +176,7 @@ const AnimesPage = () => {
 
     // Executar busca quando os parâmetros mudarem
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-
         fetchAnimes(1, false);
     }, [fetchAnimes]);
 
@@ -207,13 +235,33 @@ const AnimesPage = () => {
         clearSearch();
     };
 
-    // Abrir player
-    const handleWatchShow = (show: TVShow, season: number = 1, episode: number = 1) => {
-        setSelectedShow(show);
+    // Abrir player - agora com busca de detalhes
+    const handleWatchShow = useCallback(async (show: TVShow, season: number = 1, episode: number = 1) => {
+        setIsLoadingDetails(true);
+
+        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
+        const seriesDetails = await fetchSeriesDetails(show.id);
+
+        if (seriesDetails) {
+            setSelectedShow({
+                ...show,
+                imdb_id: seriesDetails.imdb_id,
+                seasons: seriesDetails.seasons
+            });
+        } else {
+            // Fallback: usa apenas os dados básicos
+            setSelectedShow({
+                ...show,
+                imdb_id: null,
+                seasons: []
+            });
+        }
+
         setSelectedSeason(season);
         setSelectedEpisode(episode);
         setShowPlayer(true);
-    };
+        setIsLoadingDetails(false);
+    }, [fetchSeriesDetails]);
 
     // Abrir modal de informações
     const handleShowInfo = (show: TVShow, e: React.MouseEvent) => {
@@ -313,14 +361,14 @@ const AnimesPage = () => {
                                     Filtros
                                     {(selectedGenres.length > 0 || selectedYear || minRating) && (
                                         <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                    {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
-                </span>
+                                            {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+                                        </span>
                                     )}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Layout para desktop (mantém o original) */}
+                        {/* Layout para desktop */}
                         <div className="hidden md:flex gap-4">
                             <div className="flex-1 relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -360,11 +408,12 @@ const AnimesPage = () => {
                                 Filtros
                                 {(selectedGenres.length > 0 || selectedYear || minRating) && (
                                     <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
-            </span>
+                                        {selectedGenres.length + (selectedYear ? 1 : 0) + (minRating ? 1 : 0)}
+                                    </span>
                                 )}
                             </button>
                         </div>
+
                         {/* Filtros expandidos */}
                         {showFilters && (
                             <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
@@ -461,6 +510,16 @@ const AnimesPage = () => {
                             >
                                 <X className="w-4 h-4" />
                             </button>
+                        </div>
+                    )}
+
+                    {/* Loading indicator para detalhes */}
+                    {isLoadingDetails && (
+                        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                            <div className="bg-gray-900 rounded-lg p-6 flex items-center gap-3">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+                                <span className="text-white">Carregando detalhes...</span>
+                            </div>
                         </div>
                     )}
 
@@ -625,9 +684,11 @@ const AnimesPage = () => {
             {showPlayer && selectedShow && (
                 <VideoPlayer
                     tvId={selectedShow.id}
+                    imdbId={selectedShow.imdb_id}
                     title={selectedShow.title || selectedShow.name}
                     season={selectedSeason}
                     episode={selectedEpisode}
+                    seasons={selectedShow.seasons || []}
                     onClose={() => {
                         setShowPlayer(false);
                         setSelectedShow(null);

@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Play, Star, Tv, AlertCircle } from 'lucide-react';
-import VideoPlayer from './VideoPlayer';
+import VideoPlayer from '@/app/components/video-player/index';
 
 interface TVShow {
     id: number;
     title: string;
-    imdb_id: string;
+    imdb_id?: string | null;
     name: string;
     poster_path: string;
     backdrop_path?: string;
@@ -20,6 +20,18 @@ interface TVShow {
     original_language?: string;
 }
 
+interface TVShowWithDetails extends TVShow {
+    seasons?: {
+        id: number;
+        season_number: number;
+        name: string;
+        overview: string;
+        poster_path: string | null;
+        episode_count: number;
+        air_date: string | null;
+    }[];
+}
+
 interface TVShowsGridProps {
     category?: 'popular' | 'top_rated' | 'airing_today' | 'on_the_air';
     limit?: number;
@@ -30,13 +42,29 @@ interface TVShowsGridProps {
 const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaType }: TVShowsGridProps) => {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [selectedShow, setSelectedShow] = useState<TVShow | null>(null);
+    const [selectedShow, setSelectedShow] = useState<TVShowWithDetails | null>(null);
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedSeason, setSelectedSeason] = useState<number>(1);
     const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
     const [showEpisodeSelector, setShowEpisodeSelector] = useState(false);
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+
+    // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
+    const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
+        try {
+            const response = await fetch(`/api/tv/${tvId}`);
+            if (!response.ok) {
+                throw new Error('Erro ao buscar detalhes da série');
+            }
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Erro ao buscar detalhes da série:', error);
+            return null;
+        }
+    }, []);
 
     useEffect(() => {
         const fetchTVShows = async () => {
@@ -91,22 +119,44 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaTyp
         fetchTVShows();
     }, [category, limit, originCountry]);
 
-    // ... resto do componente (handlers, renderização, etc.)
-
-    const handleWatchShow = useCallback((show: TVShow, season?: number, episode?: number, event?: React.MouseEvent | React.TouchEvent) => {
+    // Abrir player - agora com busca de detalhes
+    const handleWatchShow = useCallback(async (show: TVShow, season?: number, episode?: number, event?: React.MouseEvent | React.TouchEvent) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
-    console.log(showEpisodeSelector)
+
+        setIsLoadingDetails(true);
+
+        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
+        const seriesDetails = await fetchSeriesDetails(show.id);
+
+        let showWithDetails: TVShowWithDetails;
+
+        if (seriesDetails) {
+            showWithDetails = {
+                ...show,
+                imdb_id: seriesDetails.imdb_id,
+                seasons: seriesDetails.seasons
+            };
+        } else {
+            // Fallback: usa apenas os dados básicos
+            showWithDetails = {
+                ...show,
+                imdb_id: null,
+                seasons: []
+            };
+        }
+
         setTimeout(() => {
-            setSelectedShow(show);
+            setSelectedShow(showWithDetails);
             if (season) setSelectedSeason(season);
             if (episode) setSelectedEpisode(episode);
             setShowPlayer(true);
             setShowEpisodeSelector(false);
+            setIsLoadingDetails(false);
         }, 10);
-    }, []);
+    }, [fetchSeriesDetails]);
 
     const handleTouchStart = useCallback((e: React.TouchEvent, show: TVShow) => {
         const touch = e.touches[0];
@@ -183,6 +233,16 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaTyp
 
     return (
         <>
+            {/* Loading indicator para detalhes */}
+            {isLoadingDetails && (
+                <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+                    <div className="bg-gray-900 rounded-lg p-6 flex items-center gap-3">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500"></div>
+                        <span className="text-white">Carregando detalhes...</span>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                 {shows.map((show) => {
                     const title = show.title || show.name;
@@ -267,6 +327,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaTyp
                     title={selectedShow.title || selectedShow.name}
                     season={selectedSeason}
                     episode={selectedEpisode}
+                    seasons={selectedShow.seasons || []}
                     onClose={handleClosePlayer}
                     autoPlay={true}
                 />

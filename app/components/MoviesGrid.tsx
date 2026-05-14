@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Star, Film, AlertCircle } from 'lucide-react';
-import VideoPlayer from './VideoPlayer';
+import VideoPlayer from '@/app/components/video-player/index';
 
 interface Movie {
     id: number;

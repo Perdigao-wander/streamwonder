@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, Film} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/VideoPlayer';
+import VideoPlayer from '@/app/components/video-player/index';
 import MovieInfoModal from '@/app/components/MovieInfoModal';
 
 interface Genre {
@@ -447,7 +447,7 @@ const MoviesPage = () => {
                             <span>Resultados para: {searchQuery}</span>
                             <button
                                 onClick={clearSearch}
-                                className="ml-2 text-gray-400 hover:text-white"
+                                className="ml-2 text-gray-400 cursor-pointer hover:text-white"
                             >
                                 <X className="w-4 h-4" />
                             </button>
