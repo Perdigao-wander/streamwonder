@@ -83,7 +83,7 @@ export default function Home() {
                                     </h2>
                                 </div>
                                 <Link
-                                    href="/dorama"
+                                    href="/doramas"
                                     className="group flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-all duration-300"
                                 >
                                     <span>Ver todos</span>
