@@ -7,6 +7,7 @@ import VideoPlayer from './VideoPlayer';
 interface TVShow {
     id: number;
     title: string;
+    imdb_id: string;
     name: string;
     poster_path: string;
     backdrop_path?: string;
@@ -262,6 +263,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaTyp
             {showPlayer && selectedShow && (
                 <VideoPlayer
                     tvId={selectedShow.id}
+                    imdbId={selectedShow.imdb_id}
                     title={selectedShow.title || selectedShow.name}
                     season={selectedSeason}
                     episode={selectedEpisode}

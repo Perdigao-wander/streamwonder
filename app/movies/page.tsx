@@ -17,12 +17,14 @@ interface Movie {
     poster_path: string;
     backdrop_path?: string;
     overview?: string;
+    imdb_id?: string;
     release_date?: string;
     vote_average?: number;
     vote_count?: number;
     popularity?: number;
     genre_ids?: number[];
 }
+
 
 const MoviesPage = () => {
     const [movies, setMovies] = useState<Movie[]>([]);
@@ -608,6 +610,7 @@ const MoviesPage = () => {
             {showPlayer && selectedMovie && (
                 <VideoPlayer
                     movieId={selectedMovie.id}
+                    imdbId={selectedMovie.imdb_id}
                     title={selectedMovie.title}
                     onClose={() => {
                         setShowPlayer(false);

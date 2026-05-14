@@ -7,6 +7,7 @@ import VideoPlayer from './VideoPlayer';
 interface Movie {
     id: number;
     title: string;
+    imdb_id: string;
     name?: string;
     poster_path: string;
     backdrop_path?: string;
@@ -258,6 +259,7 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
             {showPlayer && selectedItem && (
                 <VideoPlayer
                     movieId={selectedItem.id}
+                    imdbId={selectedItem.imdb_id}
                     title={selectedItem.title || selectedItem.name || ''}
                     onClose={handleClosePlayer}
                     autoPlay={true}

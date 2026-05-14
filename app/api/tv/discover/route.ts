@@ -4,21 +4,20 @@ const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 type Serie = {
-    id: string;
-    title: string;
+    id: number;
     name: string;
-    poster_path: string;
-    backdrop_path: string;
+    poster_path: string | null;
+    backdrop_path: string | null;
     overview: string;
     first_air_date: string;
-    release_date: string;
     adult: boolean;
-    vote_average: string;
-    media_type: string;
-    vote_count: string;
-    popularity: string;
-    genre_ids: string;
-    origin_country: string;
+    vote_average: number;
+    vote_count: number;
+    popularity: number;
+    genre_ids: number[];
+    origin_country: string[];
+    original_language: string;
+    original_name: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -30,7 +29,6 @@ export async function GET(request: NextRequest) {
     const firstAirDateYear = searchParams.get('first_air_date_year') || '';
     const voteAverageGte = searchParams.get('vote_average.gte') || '';
     const withKeywords = searchParams.get('with_keywords') || '';
-    // 1. Capturar o novo parâmetro 'with_origin_country'
     const withOriginCountry = searchParams.get('with_origin_country') || '';
 
     try {
@@ -40,8 +38,6 @@ export async function GET(request: NextRequest) {
         if (firstAirDateYear) url += `&first_air_date_year=${firstAirDateYear}`;
         if (voteAverageGte) url += `&vote_average.gte=${voteAverageGte}`;
         if (withKeywords) url += `&with_keywords=${withKeywords}`;
-        // 2. Adicionar o filtro de país de origem à URL da requisição.
-        //    "KR" é o código ISO 3166-1 para a Coreia do Sul.
         if (withOriginCountry) url += `&with_origin_country=${withOriginCountry}`;
 
         const response = await fetch(url, {
@@ -54,21 +50,23 @@ export async function GET(request: NextRequest) {
         const data = await response.json();
 
         const series = data.results
-            .filter((movie: Serie) => !movie.adult)
+            .filter((serie: Serie) => !serie.adult)
             .map((serie: Serie) => ({
-            id: serie.id,
-            title: serie.name,
-            name: serie.name,
-            poster_path: serie.poster_path,
-            backdrop_path: serie.backdrop_path,
-            overview: serie.overview,
-            first_air_date: serie.first_air_date,
-            vote_average: serie.vote_average,
-            vote_count: serie.vote_count,
-            popularity: serie.popularity,
-            genre_ids: serie.genre_ids,
-            origin_country: serie.origin_country,
-        }));
+                id: serie.id,
+                title: serie.name,
+                name: serie.name,
+                poster_path: serie.poster_path,
+                backdrop_path: serie.backdrop_path,
+                overview: serie.overview,
+                first_air_date: serie.first_air_date,
+                vote_average: serie.vote_average,
+                vote_count: serie.vote_count,
+                popularity: serie.popularity,
+                genre_ids: serie.genre_ids,
+                origin_country: serie.origin_country,
+                original_language: serie.original_language,
+                original_name: serie.original_name,
+            }));
 
         return NextResponse.json({
             page: data.page,
