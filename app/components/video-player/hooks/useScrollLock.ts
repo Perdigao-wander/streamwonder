@@ -1,13 +1,13 @@
 // components/video-player/hooks/useScrollLock.ts
 import { useEffect, useCallback, useRef } from 'react';
 
-export const useScrollLock = (
-    containerRef: React.RefObject<HTMLElement | HTMLDivElement | null>,
-    allowedScrollRefs?: React.RefObject<HTMLElement | HTMLDivElement | null>[]
+export const useScrollLock = <T extends HTMLElement>(
+    containerRef: React.RefObject<T>,
+    allowedScrollRefs?: React.RefObject<T>[]
 ) => {
     const scrollPosition = useRef<number>(0);
 
-    const preventScroll = useCallback((e: TouchEvent | WheelEvent) => {
+    const preventScroll = useCallback((e: Event) => {
         const target = e.target as HTMLElement;
 
         let shouldAllowScroll = false;

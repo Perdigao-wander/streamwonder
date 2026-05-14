@@ -24,7 +24,7 @@ export const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     const seasonListRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null); // 🔴 Adicione esta linha
 
-    useScrollLock(containerRef, [episodeListRef, seasonListRef]);
+    //useScrollLock(containerRef, [episodeListRef, seasonListRef]);
 
     useEffect(() => {
         const fetchAllEpisodes = async () => {
@@ -94,8 +94,8 @@ export const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     const validSeasons = seasons.filter(season => season.season_number !== 0);
 
     return (
-        <div ref={containerRef} className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="relative z-10 w-full max-w-5xl max-h-[85vh] bg-black/40 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/50">
+        <div ref={containerRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4">
+            <div className="relative z-10 w-full max-w-5xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden border border-white/50">
 
                 <div className="absolute inset-0 z-0">
                     <img
