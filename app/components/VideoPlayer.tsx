@@ -470,8 +470,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 )}
             </div>
 
-            {/* Badge indicador de qual ID está sendo usado */}
-            {renderIdentifierBadge()}
+            {/* Badge indicador de qual ID está sendo usado
+            {renderIdentifierBadge()}*/}
         </div>
     );
 };
