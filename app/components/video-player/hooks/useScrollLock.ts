@@ -10,8 +10,17 @@ export const useScrollLock = <T extends HTMLElement>(
     const preventScroll = useCallback((e: Event) => {
         const target = e.target as HTMLElement;
 
-        let shouldAllowScroll = false;
+        // Permite scroll se o elemento (ou seu parent) tiver o atributo data-allow-scroll
+        let currentElement: HTMLElement | null = target;
+        while (currentElement && currentElement !== document.body) {
+            if (currentElement.hasAttribute?.('data-allow-scroll')) {
+                return; // Permite o scroll normalmente
+            }
+            currentElement = currentElement.parentElement;
+        }
 
+        // Checa refs permitidas
+        let shouldAllowScroll = false;
         if (allowedScrollRefs) {
             for (const ref of allowedScrollRefs) {
                 if (ref.current && ref.current.contains(target)) {
