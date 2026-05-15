@@ -38,7 +38,7 @@ const Navbar = () => {
         { href: '/doramas', label: 'Doramas', icon: Drama },
         { href: '/animes', label: 'Animes', icon: JapaneseYen },
         { href: '/canais', label: 'Canais', icon: Satellite },
-        { href: '/hqs', label: 'HQs', icon: BookOpen },
+        //{ href: '/hqs', label: 'HQs', icon: BookOpen },
     ];
 
     // Função para verificar se o link está ativo
