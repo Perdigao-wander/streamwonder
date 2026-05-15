@@ -61,28 +61,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
 
     return (
-        <div ref={containerRef} className="fixed inset-0 z-50 bg-black/95">
+        <div ref={containerRef} className="fixed inset-0 z-50 ">
             {/* Header */}
-            <div className="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/80 to-transparent p-4">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+            <div className="absolute top-0 left-40 right-0 z-30  p-4">
+                <div className="flex items-start justify-between">
+                    {/* Lado esquerdo vazio */}
+                    <div className="w-32"></div>
+
+                    {/* PlayerSelector no centro */}
+                    <div className="flex justify-center">
                         <PlayerSelector
                             selectedPlayerId={selectedPlayerId}
                             onPlayerChange={handlePlayerChange}
                             tmdbId={tmdbId}
                             imdbId={imdbId}
-                            contentType={contentType} // Passando o tipo aqui
+                            contentType={contentType}
                         />
-
-                        <button
-                            onClick={handleReload}
-                            className="p-1.5 cursor-pointer bg-black/50 hover:bg-black/70 rounded-lg backdrop-blur-sm transition-colors"
-                            title="Recarregar player"
-                            type="button"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${playerStatus.isLoading ? 'animate-spin' : ''}`} />
-                        </button>
-
                         {shouldShowEpisodeButton && (
                             <button
                                 onClick={() => setShowEpisodeSelector(!showEpisodeSelector)}
@@ -95,23 +89,29 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                         )}
                     </div>
 
-                    <div className="text-white text-sm font-medium truncate max-w-md">
-                        {title}
-                        {contentType === 'tv' && currentSeason !== null && currentEpisode !== null && (
-                            <span className="text-gray-400 ml-2">
-                                T{currentSeason} E{currentEpisode}
-                            </span>
-                        )}
-                    </div>
 
-                    <button
-                        onClick={onClose}
-                        className="p-2 rounded-full cursor-pointer bg-black/50 hover:bg-black/70 transition-colors backdrop-blur-sm"
-                        aria-label="Fechar player"
-                        type="button"
-                    >
-                        <X className="w-5 h-5 text-white" />
-                    </button>
+
+
+                    <div className="flex flex-col gap-2 items-end">
+                        <div className="flex items-center gap-3">
+{/*                            <button
+                                onClick={handleReload}
+                                className="p-1.5 cursor-pointer bg-black/50 hover:bg-black/70 rounded-lg backdrop-blur-sm transition-colors"
+                                title="Recarregar player"
+                                type="button"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${playerStatus.isLoading ? 'animate-spin' : ''}`} />
+                            </button>*/}
+                            <button
+                                onClick={onClose}
+                                className="p-2 rounded-full cursor-pointer bg-black/50 hover:bg-black/70 transition-colors backdrop-blur-sm"
+                                aria-label="Fechar player"
+                                type="button"
+                            >
+                                <X className="w-5 h-5 text-white" />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

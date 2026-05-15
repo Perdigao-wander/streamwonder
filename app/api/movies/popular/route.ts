@@ -24,7 +24,6 @@ export async function GET() {
     try {
         // Verifica se o cache é válido
         if (moviesCache && cacheTimestamp && (Date.now() - cacheTimestamp) < CACHE_DURATION) {
-            console.log('Retornando filmes do cache');
             return NextResponse.json(moviesCache);
         }
 
