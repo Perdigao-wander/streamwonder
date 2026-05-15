@@ -114,7 +114,7 @@ export default function Home() {
                             <AnimeGrid category="top_rated" limit={10} />
                         </section>
 
-                        {/* Seção de HQs */}
+                        {/* Seção de HQs
                         <section className="max-w-7xl mx-auto px-4 py-12">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
@@ -133,7 +133,7 @@ export default function Home() {
                                 </Link>
                             </div>
                             <ComicsGrid category="recent" limit={10} />
-                        </section>
+                        </section>*/}
 
                         {/* Seção de Canais de TV */}
                         <section className="max-w-7xl mx-auto px-4 py-12">
