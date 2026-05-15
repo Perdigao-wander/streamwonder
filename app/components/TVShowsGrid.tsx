@@ -39,7 +39,7 @@ interface TVShowsGridProps {
     mediaType?: 'tv' | 'anime'; // Para distinguir entre séries normais e animes
 }
 
-const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaType }: TVShowsGridProps) => {
+const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShowsGridProps) => {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -76,7 +76,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry, mediaTyp
 
                 // Se for anime (Japão) ou dorama (Coreia), usa discover com filtro
                 if (originCountry) {
-                    endpoint = `/api/tv/discover?with_origin_country=${originCountry}&sort_by=popularity.desc&limit=${limit}`;
+                    endpoint = `/api/tv/discover?with_origin_country=${originCountry}&sort_by=vote_count.desc&limit=${limit}`;
                 } else {
                     // Caso contrário, usa os endpoints normais
                     switch (category) {

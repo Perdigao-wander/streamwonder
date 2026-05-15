@@ -17,7 +17,7 @@ const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 export async function GET() {
     try {
         const response = await fetch(
-            `${TMDB_BASE_URL}/discover/tv?language=pt-BR`,
+            `${TMDB_BASE_URL}/discover/tv?language=pt-BR&sort_by=vote_count.desc`,
             {
                 headers: {
                     Authorization: `Bearer ${TMDB_TOKEN}`,

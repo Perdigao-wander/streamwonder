@@ -8,7 +8,7 @@ interface AnimeGridProps {
     genre?: string; // Para filtrar por gênero específico (ex: 'action', 'comedy')
 }
 
-const AnimeGrid = ({ category = 'popular', limit = 10, genre }: AnimeGridProps) => {
+const AnimeGrid = ({ category = 'popular', limit = 10 }: AnimeGridProps) => {
     // Pode adicionar lógica extra aqui se necessário
     return <TVShowsGrid category={category} limit={limit} originCountry="JP" />;
 };

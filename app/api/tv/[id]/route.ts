@@ -1,7 +1,6 @@
 // app/api/tv/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-// Tipos para a API do TMDb
 type TMDBGenre = {
     id: number;
     name: string;
@@ -17,24 +16,11 @@ type TMDBSeason = {
     air_date: string | null;
 };
 
-type TMDBEpisode = {
-    id: number;
-    episode_number: number;
-    name: string;
-    overview: string;
-    still_path: string | null;
-    runtime: number | null;
-    air_date: string | null;
-};
-
-type TMDBEpisodesResponse = {
-    episodes: TMDBEpisode[];
-};
-
 type TMDBTVShowResponse = {
     id: number;
     name: string;
     overview: string;
+    adult: boolean;
     backdrop_path: string | null;
     poster_path: string | null;
     first_air_date: string;
@@ -46,7 +32,6 @@ type TMDBTVShowResponse = {
     seasons: TMDBSeason[];
 };
 
-// Tipo para a temporada processada
 type ProcessedSeason = {
     id: number;
     season_number: number;
@@ -57,12 +42,12 @@ type ProcessedSeason = {
     air_date: string | null;
 };
 
-// Tipo para a resposta final da API (sem episódios para não sobrecarregar)
 type TVShowAPIResponse = {
     id: number;
     title: string;
     name: string;
     overview: string;
+    adult: boolean;
     backdrop_path: string | null;
     poster_path: string | null;
     first_air_date: string;
@@ -175,6 +160,7 @@ export async function GET(
             number_of_seasons: data.number_of_seasons,
             number_of_episodes: data.number_of_episodes,
             vote_average: data.vote_average,
+            adult: data.adult,
             genres: data.genres,
             seasons: seasons,
             media_type: 'tv',

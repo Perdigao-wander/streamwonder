@@ -62,7 +62,7 @@ const TVSeriesPage = () => {
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
-    const [sortBy, setSortBy] = useState('popularity.desc');
+    const [sortBy, setSortBy] = useState('vote_count.desc');
     const [selectedYear, setSelectedYear] = useState('');
     const [minRating, setMinRating] = useState('');
 
@@ -72,12 +72,17 @@ const TVSeriesPage = () => {
     const [totalResults, setTotalResults] = useState(0);
 
     // Opções de ordenação
+    // Opções de ordenação
     const sortOptions = [
-        { value: 'popularity.desc', label: 'Mais Populares' },
-        { value: 'vote_average.desc', label: 'Melhor Avaliados' },
-        { value: 'first_air_date.desc', label: 'Mais Recentes' },
-        { value: 'first_air_date.asc', label: 'Mais Antigos' },
-        { value: 'vote_count.desc', label: 'Mais Votados' },
+        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
+        // { value: 'popularity.desc', label: '📈 Mais Populares' },
+        // { value: 'popularity.asc', label: '📉 Menos Populares' },
+        // { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
+        //  { value: 'vote_average.asc', label: '⭐ Pior Avaliados' },
+        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
+        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
+        { value: 'name.desc', label: '🔤 Nome (Z-A)' },
+        { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
 
     // Anos disponíveis (últimos 50 anos)
@@ -132,6 +137,7 @@ const TVSeriesPage = () => {
                 url = '/api/tv/discover';
                 queryParams.append('page', page.toString());
                 queryParams.append('sort_by', sortBy);
+                queryParams.append('exclude_countries', 'JP,KR');
                 if (selectedGenres.length > 0) {
                     queryParams.append('with_genres', selectedGenres.join(','));
                 }
@@ -172,6 +178,7 @@ const TVSeriesPage = () => {
 
     // Executar busca quando os parâmetros mudarem
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         fetchSeries(1, false);
     }, [fetchSeries]);
@@ -227,7 +234,7 @@ const TVSeriesPage = () => {
         setSelectedGenres([]);
         setSelectedYear('');
         setMinRating('');
-        setSortBy('popularity.desc');
+        setSortBy('vote_count.desc');
         clearSearch();
     };
 

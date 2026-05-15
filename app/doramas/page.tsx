@@ -63,7 +63,7 @@ const DoramasPage = () => {
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
-    const [sortBy, setSortBy] = useState('popularity.desc');
+    const [sortBy, setSortBy] = useState('vote_count.desc');
     const [selectedYear, setSelectedYear] = useState('');
     const [minRating, setMinRating] = useState('');
 
@@ -74,12 +74,17 @@ const DoramasPage = () => {
 
     // Opções de ordenação
     const sortOptions = [
-        { value: 'popularity.desc', label: 'Mais Populares' },
-        { value: 'vote_average.desc', label: 'Melhor Avaliados' },
-        { value: 'first_air_date.desc', label: 'Mais Recentes' },
-        { value: 'first_air_date.asc', label: 'Mais Antigos' },
-        { value: 'vote_count.desc', label: 'Mais Votados' },
+        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
+        // { value: 'popularity.desc', label: '📈 Mais Populares' },
+        // { value: 'popularity.asc', label: '📉 Menos Populares' },
+        // { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
+        //  { value: 'vote_average.asc', label: '⭐ Pior Avaliados' },
+        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
+        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
+        { value: 'name.desc', label: '🔤 Nome (Z-A)' },
+        { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
+
 
     // Anos disponíveis (últimos 50 anos)
     const currentYear = new Date().getFullYear();
@@ -232,7 +237,7 @@ const DoramasPage = () => {
         setSelectedGenres([]);
         setSelectedYear('');
         setMinRating('');
-        setSortBy('popularity.desc');
+        setSortBy('vote_count.desc');
         clearSearch();
     };
 

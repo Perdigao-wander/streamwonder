@@ -111,7 +111,7 @@ export default function Home() {
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                                 </Link>
                             </div>
-                            <AnimeGrid category="popular" limit={10} />
+                            <AnimeGrid category="top_rated" limit={10} />
                         </section>
 
                         {/* Seção de HQs */}

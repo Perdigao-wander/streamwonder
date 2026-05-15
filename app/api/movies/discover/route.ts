@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
     const page = searchParams.get('page') || '1';
-    const sortBy = searchParams.get('sort_by') || 'popularity.desc';
+    const sortBy = searchParams.get('sort_by') || 'vote_count.desc';
     const withGenres = searchParams.get('with_genres') || '';
     const primaryReleaseYear = searchParams.get('primary_release_year') || '';
     const voteAverageGte = searchParams.get('vote_average.gte') || '';

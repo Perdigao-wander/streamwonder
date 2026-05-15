@@ -63,7 +63,7 @@ const AnimesPage = () => {
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
-    const [sortBy, setSortBy] = useState('popularity.desc');
+    const [sortBy, setSortBy] = useState('vote_count.desc');
     const [selectedYear, setSelectedYear] = useState('');
     const [minRating, setMinRating] = useState('');
 
@@ -74,11 +74,15 @@ const AnimesPage = () => {
 
     // Opções de ordenação
     const sortOptions = [
-        { value: 'popularity.desc', label: 'Mais Populares' },
-        { value: 'vote_average.desc', label: 'Melhor Avaliados' },
-        { value: 'first_air_date.desc', label: 'Mais Recentes' },
-        { value: 'first_air_date.asc', label: 'Mais Antigos' },
-        { value: 'vote_count.desc', label: 'Mais Votados' },
+        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
+       // { value: 'popularity.desc', label: '📈 Mais Populares' },
+       // { value: 'popularity.asc', label: '📉 Menos Populares' },
+        // { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
+        //  { value: 'vote_average.asc', label: '⭐ Pior Avaliados' },
+        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
+        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
+        { value: 'name.desc', label: '🔤 Nome (Z-A)' },
+        { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
 
     // Anos disponíveis (últimos 50 anos)
@@ -176,6 +180,7 @@ const AnimesPage = () => {
 
     // Executar busca quando os parâmetros mudarem
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
         fetchAnimes(1, false);
     }, [fetchAnimes]);
@@ -231,7 +236,7 @@ const AnimesPage = () => {
         setSelectedGenres([]);
         setSelectedYear('');
         setMinRating('');
-        setSortBy('popularity.desc');
+        setSortBy('vote_count.desc');
         clearSearch();
     };
 
@@ -506,7 +511,7 @@ const AnimesPage = () => {
                             <span>Resultados para: {searchQuery}</span>
                             <button
                                 onClick={clearSearch}
-                                className="ml-2 text-gray-400 hover:text-white"
+                                className="ml-2 cursor-pointer text-gray-400 hover:text-white"
                             >
                                 <X className="w-4 h-4" />
                             </button>
