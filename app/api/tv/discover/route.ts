@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
     const withRuntimeGte = searchParams.get('with_runtime.gte') || '';
     const withRuntimeLte = searchParams.get('with_runtime.lte') || '';
 
-    // 🔴 Parâmetro opcional para excluir países (ex: exclude_countries=JP,KR)
     const excludeCountries = searchParams.get('exclude_countries');
 
     try {
