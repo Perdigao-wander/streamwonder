@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Star, Film, AlertCircle } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
+import {useRouter} from "next/navigation";
 
 interface Movie {
     id: number;
@@ -35,8 +36,8 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
     const [showPlayer, setShowPlayer] = useState(false);
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
     const cardRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
+    const router = useRouter();
 
-    // Remova o useCallback e a função fetchItems externa
     useEffect(() => {
         const fetchItems = async () => {
             try {
@@ -87,18 +88,17 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
         fetchItems();
     }, [type, initialCategory, limit]); // ✅ Dependências corretas
 
-    // Handler para clique (desktop e mobile)
-    const handleWatch = useCallback((item: Movie, event?: React.MouseEvent | React.TouchEvent) => {
+
+    const handleShowInfo = useCallback(async (movie: Movie, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
 
-        setTimeout(() => {
-            setSelectedItem(item);
-            setShowPlayer(true);
-        }, 10);
-    }, []);
+        const mediaType = 'movie';
+
+        router.push(`/${mediaType}/${movie.id}`);
+    }, [router]);
 
     // Handler para touch start (identificar scroll vs clique)
     const handleTouchStart = useCallback((e: React.TouchEvent, item: Movie) => {
@@ -116,11 +116,11 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
 
         if (deltaX < 10 && deltaY < 10) {
             e.preventDefault();
-            handleWatch(item, e);
+            handleShowInfo(item, e);
         }
 
         setTouchStart(null);
-    }, [touchStart, handleWatch]);
+    }, [touchStart, handleShowInfo]);
 
     // Fechar player com segurança
     const handleClosePlayer = useCallback(() => {
@@ -193,7 +193,7 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                             key={item.id}
                             ref={el => { cardRefs.current[item.id] = el; }}
                             className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105"
-                            onClick={(e) => handleWatch(item, e)}
+                            onClick={(e) => handleShowInfo(item, e)}
                             onTouchStart={(e) => handleTouchStart(e, item)}
                             onTouchEnd={(e) => handleTouchEnd(e, item)}
                             role="button"
@@ -201,7 +201,7 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
-                                    handleWatch(item);
+                                    handleShowInfo(item, e);
                                 }
                             }}
                         >

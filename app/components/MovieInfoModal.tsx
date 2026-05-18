@@ -59,7 +59,6 @@ const MovieInfoModal = ({ movie, onClose, onWatch }: MovieInfoModalProps) => {
         fetchGenres();
     }, []);
 
-    // Buscar detalhes do filme (para obter duração)
     useEffect(() => {
         const fetchMovieDetails = async () => {
             try {

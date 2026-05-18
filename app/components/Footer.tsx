@@ -36,7 +36,7 @@ const Footer = () => {
         { name: 'Séries', href: '/series', icon: <Tv className="w-4 h-4" /> },
         { name: 'Doramas', href: '/doramas', icon: <Drama className="w-4 h-4" /> },
         { name: 'Animes', href: '/animes', icon: <JapaneseYen className="w-4 h-4" /> },
-        { name: 'HQs', href: '/hqs', icon: <BookOpen className="w-4 h-4" /> },
+       // { name: 'HQs', href: '/hqs', icon: <BookOpen className="w-4 h-4" /> },
         { name: 'Canais ao Vivo', href: '/canais', icon: <Satellite className="w-4 h-4" /> },
     ];
 

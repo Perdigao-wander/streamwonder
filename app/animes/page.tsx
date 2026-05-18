@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, JapaneseYen } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/video-player/index';
-import SeriesInfoModal from '@/app/components/SeriesInfoModal';
+import {useRouter} from "next/navigation";
 
 interface Genre {
     id: number;
@@ -55,10 +54,7 @@ const AnimesPage = () => {
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedSeason, setSelectedSeason] = useState(1);
     const [selectedEpisode, setSelectedEpisode] = useState(1);
-
-    // Estado para o modal de informações
-    const [selectedInfoShow, setSelectedInfoShow] = useState<TVShow | null>(null);
-    const [showInfoModal, setShowInfoModal] = useState(false);
+    const router = useRouter();
 
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
@@ -75,10 +71,6 @@ const AnimesPage = () => {
     // Opções de ordenação
     const sortOptions = [
         { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
-       // { value: 'popularity.desc', label: '📈 Mais Populares' },
-       // { value: 'popularity.asc', label: '📉 Menos Populares' },
-        // { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
-        //  { value: 'vote_average.asc', label: '⭐ Pior Avaliados' },
         { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
         { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
@@ -240,40 +232,16 @@ const AnimesPage = () => {
         clearSearch();
     };
 
-    // Abrir player - agora com busca de detalhes
-    const handleWatchShow = useCallback(async (show: TVShow, season: number = 1, episode: number = 1) => {
-        setIsLoadingDetails(true);
-
-        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
-        const seriesDetails = await fetchSeriesDetails(show.id);
-
-        if (seriesDetails) {
-            setSelectedShow({
-                ...show,
-                imdb_id: seriesDetails.imdb_id,
-                seasons: seriesDetails.seasons
-            });
-        } else {
-            // Fallback: usa apenas os dados básicos
-            setSelectedShow({
-                ...show,
-                imdb_id: null,
-                seasons: []
-            });
+    const handleShowInfo = useCallback(async (show: TVShow, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
-        setSelectedSeason(season);
-        setSelectedEpisode(episode);
-        setShowPlayer(true);
-        setIsLoadingDetails(false);
-    }, [fetchSeriesDetails]);
+        const mediaType =  'tv';
 
-    // Abrir modal de informações
-    const handleShowInfo = (show: TVShow, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSelectedInfoShow(show);
-        setShowInfoModal(true);
-    };
+        router.push(`/${mediaType}/${show.id}`);
+    }, [router]);
 
     if (loading && !loadingMore) {
         return (
@@ -544,7 +512,7 @@ const AnimesPage = () => {
                                         alt={show.title}
                                         className="w-full aspect-[2/3] object-cover"
                                         loading="lazy"
-                                        onClick={() => handleWatchShow(show, 1, 1)}
+                                        onClick={(e) => handleShowInfo(show, e)}
                                     />
 
                                     {/* Overlay com botões */}
@@ -553,7 +521,7 @@ const AnimesPage = () => {
                                             className="bg-indigo-600 cursor-pointer rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleWatchShow(show, 1, 1);
+                                                handleShowInfo(show, e);
                                             }}
                                         >
                                             <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24">
@@ -561,13 +529,13 @@ const AnimesPage = () => {
                                             </svg>
                                         </button>
 
-                                        {/* Botão de informações (i) */}
+                                        {/* Botão de informações (i)
                                         <button
                                             className="bg-white/20 cursor-pointer backdrop-blur-sm rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform hover:bg-white/30"
                                             onClick={(e) => handleShowInfo(show, e)}
                                         >
                                             <Info className="w-5 h-5 text-white" />
-                                        </button>
+                                        </button>*/}
                                     </div>
 
                                     {/* Badge de nota */}
@@ -684,38 +652,6 @@ const AnimesPage = () => {
                     )}
                 </div>
             </div>
-
-            {/* Video Player */}
-            {showPlayer && selectedShow && (
-                <VideoPlayer
-                    tvId={selectedShow.id}
-                    imdbId={selectedShow.imdb_id}
-                    title={selectedShow.title || selectedShow.name}
-                    season={selectedSeason}
-                    episode={selectedEpisode}
-                    seasons={selectedShow.seasons || []}
-                    onClose={() => {
-                        setShowPlayer(false);
-                        setSelectedShow(null);
-                    }}
-                    autoPlay={true}
-                />
-            )}
-
-            {/* Modal de Informações */}
-            {showInfoModal && selectedInfoShow && (
-                <SeriesInfoModal
-                    show={selectedInfoShow}
-                    onClose={() => {
-                        setShowInfoModal(false);
-                        setSelectedInfoShow(null);
-                    }}
-                    onWatch={() => {
-                        setShowInfoModal(false);
-                        handleWatchShow(selectedInfoShow, 1, 1);
-                    }}
-                />
-            )}
         </>
     );
 };

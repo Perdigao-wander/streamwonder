@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, Tv} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/video-player/index';
-import SeriesInfoModal from '@/app/components/SeriesInfoModal';
+import {useRouter} from "next/navigation";
 
 interface Genre {
     id: number;
@@ -50,14 +49,6 @@ const TVSeriesPage = () => {
     const [tempSearchQuery, setTempSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedShow, setSelectedShow] = useState<TVShowWithDetails | null>(null);
-    const [showPlayer, setShowPlayer] = useState(false);
-    const [selectedSeason, setSelectedSeason] = useState(1);
-    const [selectedEpisode, setSelectedEpisode] = useState(1);
-
-    // Estado para o modal de informações
-    const [selectedInfoShow, setSelectedInfoShow] = useState<TVShow | null>(null);
-    const [showInfoModal, setShowInfoModal] = useState(false);
 
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
@@ -65,6 +56,7 @@ const TVSeriesPage = () => {
     const [sortBy, setSortBy] = useState('vote_count.desc');
     const [selectedYear, setSelectedYear] = useState('');
     const [minRating, setMinRating] = useState('');
+    const router = useRouter();
 
     // Paginação
     const [currentPage, setCurrentPage] = useState(1);
@@ -75,36 +67,15 @@ const TVSeriesPage = () => {
     // Opções de ordenação
     const sortOptions = [
         { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
-        // { value: 'popularity.desc', label: '📈 Mais Populares' },
-        // { value: 'popularity.asc', label: '📉 Menos Populares' },
-        // { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
-        //  { value: 'vote_average.asc', label: '⭐ Pior Avaliados' },
         { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
         { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
         { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
 
-    // Anos disponíveis (últimos 50 anos)
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 50 }, (_, i) => currentYear - i);
 
-    // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
-    const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
-        try {
-            const response = await fetch(`/api/tv/${tvId}`);
-            if (!response.ok) {
-                throw new Error('Erro ao buscar detalhes da série');
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Erro ao buscar detalhes da série:', error);
-            return null;
-        }
-    }, []);
-
-    // Buscar gêneros
     useEffect(() => {
         const fetchGenres = async () => {
             try {
@@ -238,40 +209,16 @@ const TVSeriesPage = () => {
         clearSearch();
     };
 
-    // Abrir player - agora com busca de detalhes
-    const handleWatchShow = useCallback(async (show: TVShow, season: number = 1, episode: number = 1) => {
-        setIsLoadingDetails(true);
-
-        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
-        const seriesDetails = await fetchSeriesDetails(show.id);
-
-        if (seriesDetails) {
-            setSelectedShow({
-                ...show,
-                imdb_id: seriesDetails.imdb_id,
-                seasons: seriesDetails.seasons
-            });
-        } else {
-            // Fallback: usa apenas os dados básicos
-            setSelectedShow({
-                ...show,
-                imdb_id: null,
-                seasons: []
-            });
+    const handleShowInfo = useCallback(async (show: TVShow, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }
 
-        setSelectedSeason(season);
-        setSelectedEpisode(episode);
-        setShowPlayer(true);
-        setIsLoadingDetails(false);
-    }, [fetchSeriesDetails]);
+        const mediaType =  'tv';
 
-    // Abrir modal de informações
-    const handleShowInfo = (show: TVShow, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSelectedInfoShow(show);
-        setShowInfoModal(true);
-    };
+        router.push(`/${mediaType}/${show.id}`);
+    }, [router]);
 
     if (loading && !loadingMore) {
         return (
@@ -534,7 +481,7 @@ const TVSeriesPage = () => {
                                         alt={show.title}
                                         className="w-full aspect-[2/3] object-cover"
                                         loading="lazy"
-                                        onClick={() => handleWatchShow(show, 1, 1)}
+                                        onClick={(e) => handleShowInfo(show, e)}
                                     />
 
                                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
@@ -542,19 +489,12 @@ const TVSeriesPage = () => {
                                             className="bg-indigo-600 cursor-pointer rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleWatchShow(show, 1, 1);
+                                                handleShowInfo(show, e);
                                             }}
                                         >
                                             <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24">
                                                 <path d="M8 5v14l11-7z"/>
                                             </svg>
-                                        </button>
-
-                                        <button
-                                            className="bg-white/20 cursor-pointer backdrop-blur-sm rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform hover:bg-white/30"
-                                            onClick={(e) => handleShowInfo(show, e)}
-                                        >
-                                            <Info className="w-5 h-5 text-white" />
                                         </button>
                                     </div>
 
@@ -666,38 +606,6 @@ const TVSeriesPage = () => {
                     )}
                 </div>
             </div>
-
-            {/* Video Player */}
-            {showPlayer && selectedShow && (
-                <VideoPlayer
-                    tvId={selectedShow.id}
-                    imdbId={selectedShow.imdb_id}
-                    title={selectedShow.title || selectedShow.name}
-                    season={selectedSeason}
-                    episode={selectedEpisode}
-                    seasons={selectedShow.seasons || []}
-                    onClose={() => {
-                        setShowPlayer(false);
-                        setSelectedShow(null);
-                    }}
-                    autoPlay={true}
-                />
-            )}
-
-            {/* Modal de Informações da Série */}
-            {showInfoModal && selectedInfoShow && (
-                <SeriesInfoModal
-                    show={selectedInfoShow}
-                    onClose={() => {
-                        setShowInfoModal(false);
-                        setSelectedInfoShow(null);
-                    }}
-                    onWatch={() => {
-                        setShowInfoModal(false);
-                        handleWatchShow(selectedInfoShow, 1, 1);
-                    }}
-                />
-            )}
         </>
     );
 };

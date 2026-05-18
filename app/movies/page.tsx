@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {Search, Filter, X, Star, ChevronLeft, ChevronRight, SearchIcon, Info, Film} from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
-import VideoPlayer from '@/app/components/video-player/index';
-import MovieInfoModal from '@/app/components/MovieInfoModal';
+import {useRouter} from "next/navigation";
 
 interface Genre {
     id: number;
@@ -35,12 +34,7 @@ const MoviesPage = () => {
     const [tempSearchQuery, setTempSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-    const [showPlayer, setShowPlayer] = useState(false);
-
-    // Estado para o modal de informações
-    const [selectedInfoMovie, setSelectedInfoMovie] = useState<Movie | null>(null);
-    const [showInfoModal, setShowInfoModal] = useState(false);
+    const router = useRouter();
 
     // Filtros
     const [genres, setGenres] = useState<Genre[]>([]);
@@ -199,18 +193,17 @@ const MoviesPage = () => {
         clearSearch();
     };
 
-    // Abrir player
-    const handleWatchMovie = (movie: Movie) => {
-        setSelectedMovie(movie);
-        setShowPlayer(true);
-    };
+    const handleShowInfo = useCallback(async (movie: Movie, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
-    // Abrir modal de informações
-    const handleShowInfo = (movie: Movie, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSelectedInfoMovie(movie);
-        setShowInfoModal(true);
-    };
+        const mediaType =  'movie';
+
+        router.push(`/${mediaType}/${movie.id}`);
+    }, [router]);
+
 
     if (loading && !loadingMore) {
         return (
@@ -459,7 +452,7 @@ const MoviesPage = () => {
                         {movies.map((movie) => (
                             <div
                                 key={movie.id}
-                                onClick={() => handleWatchMovie(movie)}
+                                onClick={(e) => handleShowInfo(movie,e)}
                                 className="group cursor-pointer transition-transform duration-300 hover:scale-105"
                             >
                                 <div className="relative rounded-xl overflow-hidden bg-gray-900">
@@ -479,7 +472,7 @@ const MoviesPage = () => {
                                             className="bg-indigo-600 cursor-pointer rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform"
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                handleWatchMovie(movie);
+                                                handleShowInfo(movie,e);
                                             }}
                                         >
                                             <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24">
@@ -487,13 +480,13 @@ const MoviesPage = () => {
                                             </svg>
                                         </button>
 
-                                        {/* Botão de informações (i) */}
+                                        {/* Botão de informações (i)
                                         <button
                                             className="bg-white/20 cursor-pointer backdrop-blur-sm rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform hover:bg-white/30"
                                             onClick={(e) => handleShowInfo(movie, e)}
                                         >
                                             <Info className="w-5 h-5 text-white" />
-                                        </button>
+                                        </button>*/}
                                     </div>
 
                                     {/* Badge de nota */}
@@ -605,35 +598,6 @@ const MoviesPage = () => {
                     )}
                 </div>
             </div>
-
-            {/* Video Player */}
-            {showPlayer && selectedMovie && (
-                <VideoPlayer
-                    movieId={selectedMovie.id}
-                    imdbId={selectedMovie.imdb_id}
-                    title={selectedMovie.title}
-                    onClose={() => {
-                        setShowPlayer(false);
-                        setSelectedMovie(null);
-                    }}
-                    autoPlay={true}
-                />
-            )}
-
-            {/* Modal de Informações do Filme */}
-            {showInfoModal && selectedInfoMovie && (
-                <MovieInfoModal
-                    movie={selectedInfoMovie}
-                    onClose={() => {
-                        setShowInfoModal(false);
-                        setSelectedInfoMovie(null);
-                    }}
-                    onWatch={() => {
-                        setShowInfoModal(false);
-                        handleWatchMovie(selectedInfoMovie);
-                    }}
-                />
-            )}
         </>
     );
 };

@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Play, Star, Tv, AlertCircle } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
+import {useRouter} from "next/navigation";
 
 interface TVShow {
     id: number;
@@ -50,6 +51,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
     const [selectedEpisode, setSelectedEpisode] = useState<number>(1);
     const [showEpisodeSelector, setShowEpisodeSelector] = useState(false);
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+    const router = useRouter();
 
     // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
     const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
@@ -119,44 +121,16 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
         fetchTVShows();
     }, [category, limit, originCountry]);
 
-    // Abrir player - agora com busca de detalhes
-    const handleWatchShow = useCallback(async (show: TVShow, season?: number, episode?: number, event?: React.MouseEvent | React.TouchEvent) => {
+    const handleShowInfo = useCallback(async (show: TVShow, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
         if (event) {
             event.preventDefault();
             event.stopPropagation();
         }
 
-        setIsLoadingDetails(true);
+        const mediaType = show.media_type || (show.first_air_date ? 'tv' : 'movie');
 
-        // Busca os detalhes completos da série (inclui temporadas e IMDb ID)
-        const seriesDetails = await fetchSeriesDetails(show.id);
-
-        let showWithDetails: TVShowWithDetails;
-
-        if (seriesDetails) {
-            showWithDetails = {
-                ...show,
-                imdb_id: seriesDetails.imdb_id,
-                seasons: seriesDetails.seasons
-            };
-        } else {
-            // Fallback: usa apenas os dados básicos
-            showWithDetails = {
-                ...show,
-                imdb_id: null,
-                seasons: []
-            };
-        }
-
-        setTimeout(() => {
-            setSelectedShow(showWithDetails);
-            if (season) setSelectedSeason(season);
-            if (episode) setSelectedEpisode(episode);
-            setShowPlayer(true);
-            setShowEpisodeSelector(false);
-            setIsLoadingDetails(false);
-        }, 10);
-    }, [fetchSeriesDetails]);
+        router.push(`/${mediaType}/${show.id}`);
+    }, [router]);
 
     const handleTouchStart = useCallback((e: React.TouchEvent, show: TVShow) => {
         const touch = e.touches[0];
@@ -172,11 +146,11 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
 
         if (deltaX < 10 && deltaY < 10) {
             e.preventDefault();
-            handleWatchShow(show, 1, 1, e);
+            handleShowInfo(show, e);
         }
 
         setTouchStart(null);
-    }, [touchStart, handleWatchShow]);
+    }, [touchStart, handleShowInfo]);
 
     const handleClosePlayer = useCallback(() => {
         setShowPlayer(false);
@@ -255,7 +229,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                         <div
                             key={show.id}
                             className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105"
-                            onClick={(e) => handleWatchShow(show, 1, 1, e)}
+                            onClick={(e) => handleShowInfo(show, e)}
                             onTouchStart={(e) => handleTouchStart(e, show)}
                             onTouchEnd={(e) => handleTouchEnd(e, show)}
                             role="button"
@@ -263,7 +237,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
                                     e.preventDefault();
-                                    handleWatchShow(show, 1, 1);
+                                    handleShowInfo(show, e);
                                 }
                             }}
                         >

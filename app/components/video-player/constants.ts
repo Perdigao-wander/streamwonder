@@ -7,21 +7,22 @@ export const PLAYERS_CONFIG: readonly PlayerConfig[] = [
         name: 'WarezCDN',
         supportsTmdb: true,
         buildUrl: ({ imdbId, tmdbId, type, season, episode, autoPlay }): string => {
-            const identifier = tmdbId ?? imdbId;
-            if (!identifier) return '';
-
-            const path = type === 'movie' ? 'filme' : 'serie';
-            const url = `https://warezcdn.site/${path}/${identifier}`;
-
-            const params = new URLSearchParams();
-            if (autoPlay) params.set('autoplay', '1');
-            if (type === 'tv' && season !== null && episode !== null) {
-                params.set('s', String(season));
-                params.set('e', String(episode));
+            if (type === 'movie') {
+                const identifier = tmdbId ?? imdbId;
+                if (!identifier) return '';
+                let url = `https://warezcdn.site/filme/${identifier}`;
+                if (autoPlay) url += `?autoplay=1`;
+                return url;
             }
 
-            const queryString = params.toString();
-            return queryString ? `${url}?${queryString}` : url;
+
+            if (type === 'tv' ) {
+                const identifier = tmdbId ?? imdbId;
+                if (!identifier || season === null || episode === null) return '';
+
+                return `https://warezcdn.site/serie/${identifier}/${season}/${episode}`;
+            }
+            return '';
         }
     },
     {
