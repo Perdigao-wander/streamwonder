@@ -53,21 +53,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
     const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
     const router = useRouter();
 
-    // Função para buscar detalhes da série (inclui temporadas e IMDb ID)
-    const fetchSeriesDetails = useCallback(async (tvId: number): Promise<TVShowWithDetails | null> => {
-        try {
-            const response = await fetch(`/api/tv/${tvId}`);
-            if (!response.ok) {
-                throw new Error('Erro ao buscar detalhes da série');
-            }
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Erro ao buscar detalhes da série:', error);
-            return null;
-        }
-    }, []);
-
     useEffect(() => {
         const fetchTVShows = async () => {
             try {

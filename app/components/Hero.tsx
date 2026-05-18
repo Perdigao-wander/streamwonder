@@ -3,7 +3,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import { ChevronLeft, ChevronRight, Play, Info } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
-import SeriesInfoModal from '@/app/components/SeriesInfoModal';
+import {useRouter} from "next/navigation";
 
 interface Movie {
     id: number;
@@ -29,20 +29,16 @@ const Hero = () => {
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+    const router = useRouter();
 
-    // Estado para modal de informações
-    const [showInfoModal, setShowInfoModal] = useState(false);
-    const [selectedInfoMovie, setSelectedInfoMovie] = useState<Movie | null>(null);
 
     // Variáveis para suporte a touch
     const touchStartX = useRef<number>(0);
     const touchEndX = useRef<number>(0);
     const [isTouching, setIsTouching] = useState(false);
 
-    // Referência para o container do hero
     const heroContainerRef = useRef<HTMLDivElement>(null);
 
-    // Função para buscar detalhes do filme (IMDb ID)
     const fetchMovieDetails = useCallback(async (movieId: number) => {
         try {
             const response = await fetch(`/api/movies/${movieId}`);
@@ -107,7 +103,6 @@ const Hero = () => {
         setTimeout(() => setIsAutoPlaying(true), 10000);
     };
 
-    // Handlers para touch mobile
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
         setIsTouching(true);
@@ -138,7 +133,6 @@ const Hero = () => {
         setTimeout(() => setIsAutoPlaying(true), 5000);
     };
 
-    // Assistir filme
     const handleWatchMovie = useCallback(async (movie: Movie) => {
         setIsLoadingDetails(true);
 
@@ -160,14 +154,17 @@ const Hero = () => {
         setIsLoadingDetails(false);
     }, [fetchMovieDetails]);
 
-    // Abrir modal de informações
-    const handleShowInfo = (movie: Movie, e: React.MouseEvent) => {
-        e.stopPropagation();
-        setSelectedInfoMovie(movie);
-        setShowInfoModal(true);
-    };
+    const handleShowInfo = useCallback(async (movie: Movie, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
-    // Buscar filmes populares
+        const mediaType =  'movie';
+
+        router.push(`/${mediaType}/${movie.id}`);
+    }, [router]);
+
     useEffect(() => {
         const fetchPopularMovies = async () => {
             try {
@@ -183,7 +180,6 @@ const Hero = () => {
         fetchPopularMovies();
     }, []);
 
-    // Auto-play do carrossel
     useEffect(() => {
         if (!isAutoPlaying || movies.length === 0 || isTransitioning) return;
 
@@ -387,31 +383,6 @@ const Hero = () => {
                     autoPlay={true}
                 />
             )}
-
-            {/* Modal de Informações */}
-            {showInfoModal && selectedInfoMovie && (
-                <SeriesInfoModal
-                    show={{
-                        id: selectedInfoMovie.id,
-                        title: selectedInfoMovie.title,
-                        name: selectedInfoMovie.title,
-                        poster_path: selectedInfoMovie.poster_path,
-                        backdrop_path: selectedInfoMovie.backdrop_path,
-                        overview: selectedInfoMovie.overview,
-                        first_air_date: selectedInfoMovie.release_date,
-                        vote_average: selectedInfoMovie.vote_average,
-                    }}
-                    onClose={() => {
-                        setShowInfoModal(false);
-                        setSelectedInfoMovie(null);
-                    }}
-                    onWatch={() => {
-                        setShowInfoModal(false);
-                        handleWatchMovie(selectedInfoMovie);
-                    }}
-                />
-            )}
-
             {/* Loading indicator para detalhes */}
             {isLoadingDetails && (
                 <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">

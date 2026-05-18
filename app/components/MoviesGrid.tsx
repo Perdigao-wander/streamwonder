@@ -76,6 +76,7 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'upcoming', limit = 10 }
                 }
 
                 const data = await response.json();
+
                 setItems(data.slice(0, limit));
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Erro ao carregar');

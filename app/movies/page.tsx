@@ -573,7 +573,7 @@ const MoviesPage = () => {
                             <button
                                 onClick={loadMore}
                                 disabled={loadingMore}
-                                className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                                className="px-6 py-3 cursor-pointer bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
                             >
                                 {loadingMore ? 'Carregando...' : 'Carregar Mais'}
                             </button>

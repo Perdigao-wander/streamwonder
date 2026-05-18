@@ -36,6 +36,86 @@ const sortOptions = {
     'name.asc': 'name.asc',
 };
 
+// LISTA DE TÍTULOS BLOQUEADOS
+const BLOCKED_TITLES = [
+    'Tayuan',
+    'Rita',
+    'Hot Girls'
+];
+
+// Função para verificar se o título contém conteúdo adulto
+function isAdultContent(title: string): boolean {
+    const normalizedTitle = title.toLowerCase().trim();
+
+    const adultIndicators = [
+        'ninfomaniaca', 'ninfomaníaca', 'nymphomaniac', 'Hot Girls',
+        '50 tons', 'fifty shades',
+        '365 dias', '365 days',
+        'caligula', 'emmanuelle',
+        'salo', 'sodoma',
+        'irreversible', 'cannibal',
+        'centopeia', 'serbian',
+        'porn', 'erotic', 'adult',
+        'sexy', 'sensual', 'xxx',
+        'hentai', 'ecchi', 'yaoi', 'yuri'
+    ];
+
+    return adultIndicators.some(indicator =>
+        normalizedTitle.includes(indicator)
+    );
+}
+
+// Função para verificar se o título está na lista de bloqueio
+function isTitleBlocked(title: string): boolean {
+    const normalizedTitle = title.toLowerCase().trim();
+
+    return BLOCKED_TITLES.some(blockedTitle => {
+        const normalizedBlocked = blockedTitle.toLowerCase().trim();
+        return normalizedTitle.includes(normalizedBlocked);
+    });
+}
+
+// Função para verificar se a série tem votação zerada
+function hasZeroVotes(serie: Serie): boolean {
+    return serie.vote_average === 0 && serie.vote_count === 0;
+}
+
+// Função principal de filtragem de séries
+function filterTVShows(shows: Serie[]): Serie[] {
+    return shows.filter(show => {
+        // Filtra séries sem votação
+        if (hasZeroVotes(show)) return false;
+
+        // Filtra séries adultas (flag da API)
+        if (show.adult) return false;
+
+        // Filtra por conteúdo adulto no título
+        if (isAdultContent(show.name)) return false;
+
+        // Filtra títulos específicos da lista bloqueada
+        if (isTitleBlocked(show.name)) return false;
+
+        return true;
+    });
+}
+
+// Função para calcular o total de resultados considerando a filtragem
+function calculateFilteredTotal(
+    originalTotal: number,
+    filteredCount: number,
+    originalResults: Serie[]
+): { filteredTotalResults: number; filteredTotalPages: number } {
+    const filterRatio = originalResults.length > 0
+        ? filteredCount / originalResults.length
+        : 1;
+
+    const filteredTotalResults = Math.floor(originalTotal * filterRatio);
+    const ITEMS_PER_PAGE = 20;
+    const filteredTotalPages = Math.ceil(filteredTotalResults / ITEMS_PER_PAGE);
+
+    return { filteredTotalResults, filteredTotalPages };
+}
+
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
 
@@ -73,32 +153,41 @@ export async function GET(request: NextRequest) {
             },
         });
 
+        if (!response.ok) {
+            throw new Error(`Erro na API: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        let results = data.results;
+        let filteredByContent = filterTVShows(data.results);
 
+        // Aplicar filtro de países excluídos (se necessário)
         if (excludeCountries) {
             const excludedCountriesList = excludeCountries.split(',').map(c => c.trim().toUpperCase());
 
-            results = data.results
-                .filter((serie: Serie) => !serie.adult)
-                .filter((serie: Serie) => {
-                    // Se não tem origin_country, mantém (não conseguimos verificar)
-                    if (!serie.origin_country || serie.origin_country.length === 0) {
-                        return true;
-                    }
-                    // Verifica se algum país está na lista de excluídos
-                    const hasExcludedCountry = serie.origin_country.some(country =>
-                        excludedCountriesList.includes(country)
-                    );
-                    // Mantém apenas séries que NÃO têm países excluídos
-                    return !hasExcludedCountry;
-                });
-        } else {
-            results = data.results.filter((serie: Serie) => !serie.adult);
+            filteredByContent = filteredByContent.filter((serie: Serie) => {
+                // Se não tem origin_country, mantém (não conseguimos verificar)
+                if (!serie.origin_country || serie.origin_country.length === 0) {
+                    return true;
+                }
+                // Verifica se algum país está na lista de excluídos
+                const hasExcludedCountry = serie.origin_country.some(country =>
+                    excludedCountriesList.includes(country)
+                );
+                // Mantém apenas séries que NÃO têm países excluídos
+                return !hasExcludedCountry;
+            });
         }
 
-        const series = results.map((serie: Serie) => ({
+        // Calcular totais atualizados baseados na filtragem
+        const { filteredTotalResults, filteredTotalPages } = calculateFilteredTotal(
+            data.total_results,
+            filteredByContent.length,
+            data.results
+        );
+
+        // Mapear para o formato de saída
+        const series = filteredByContent.map((serie: Serie) => ({
             id: serie.id,
             title: serie.name,
             name: serie.name,
@@ -116,16 +205,18 @@ export async function GET(request: NextRequest) {
             original_name: serie.original_name,
         }));
 
+        // Retornar resposta com totais atualizados
         return NextResponse.json({
-            page: data.page,
-            total_pages: data.total_pages,
-            total_results: series.length,
+            page: parseInt(page),
+            total_pages: filteredTotalPages,
+            total_results: filteredTotalResults,
             results: series,
             sort_options: sortOptions,
             current_sort: sortBy,
-            filtered: !!excludeCountries, // Indica se foi aplicado filtro
+            filtered: !!excludeCountries || filteredByContent.length !== data.results.length,
             excluded_countries: excludeCountries ? excludeCountries.split(',') : null,
         });
+
     } catch (error) {
         console.error('Erro ao buscar séries:', error);
         return NextResponse.json({ error: 'Erro ao buscar séries' }, { status: 500 });
