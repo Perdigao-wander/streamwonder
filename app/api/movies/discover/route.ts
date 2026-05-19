@@ -67,43 +67,30 @@ function filterMovies(movies: Movie[]): Movie[] {
     const filtered = movies.filter(movie => {
         // 1. Filtra filmes sem votação (vote_average = 0 e vote_count = 0)
         if (hasZeroVotes(movie)) {
-            console.log(`⭐ Filme sem votação removido: ${movie.title} (votos: ${movie.vote_count}, média: ${movie.vote_average})`);
             zeroVotesCount++;
             return false;
         }
 
         // 2. Filtra filmes adultos (flag da API)
         if (movie.adult) {
-            console.log(`🔞 Filme adulto bloqueado (flag): ${movie.title}`);
             adultFlagCount++;
             return false;
         }
 
         // 3. Filtra por conteúdo adulto no título
         if (isAdultContent(movie.title)) {
-            console.log(`🔞 Conteúdo adulto detectado: ${movie.title}`);
             adultContentCount++;
             return false;
         }
 
         // 4. Filtra títulos específicos da lista bloqueada
         if (isTitleBlocked(movie.title)) {
-            console.log(`🚫 Título bloqueado (lista negra): ${movie.title}`);
             blockedTitleCount++;
             return false;
         }
 
         return true;
     });
-
-    // Estatísticas de filtragem
-    console.log('📊 ESTATÍSTICAS DE FILTRAGEM:');
-    console.log(`   Total original: ${movies.length}`);
-    console.log(`   ⭐ Filtrados (sem votação): ${zeroVotesCount}`);
-    console.log(`   🔞 Filtrados (flag adulto): ${adultFlagCount}`);
-    console.log(`   🔞 Filtrados (conteúdo adulto): ${adultContentCount}`);
-    console.log(`   🚫 Filtrados (lista bloqueada): ${blockedTitleCount}`);
-    console.log(`   ✅ Total restante: ${filtered.length}`);
 
     return filtered;
 }
@@ -220,13 +207,7 @@ export async function GET(request: NextRequest) {
             data.results
         );
 
-        console.log('📊 ATUALIZAÇÃO DE PAGINAÇÃO:');
-        console.log(`   Total original API: ${data.total_results}`);
-        console.log(`   Total após filtro: ${filteredTotalResults}`);
-        console.log(`   Páginas originais: ${data.total_pages}`);
-        console.log(`   Páginas após filtro: ${filteredTotalPages}`);
-
-        // 5. Buscar IMDb IDs para todos os filmes filtrados
+           // 5. Buscar IMDb IDs para todos os filmes filtrados
         const moviesWithImdb = await Promise.all(
             filteredMovies.map(async (movie: Movie) => {
                 const imdbId = await fetchImdbId(movie.id);
@@ -254,13 +235,6 @@ export async function GET(request: NextRequest) {
             total_pages: filteredTotalPages,
             total_results: filteredTotalResults,
             results: moviesWithImdb,
-            // Opcional: incluir metadados de filtragem para debug
-            filter_metadata: process.env.NODE_ENV === 'development' ? {
-                original_total: data.total_results,
-                original_pages: data.total_pages,
-                filtered_count: filteredMovies.length,
-                filter_ratio: (filteredMovies.length / data.results.length).toFixed(2)
-            } : undefined
         });
 
     } catch (error) {

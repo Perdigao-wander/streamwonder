@@ -22,6 +22,8 @@ export async function GET(
 
         const movieData = await movieResponse.json();
 
+        console.log(movieData)
+
         // Busca vídeos (trailers, etc)
         const videosResponse = await fetch(
             `${TMDB_BASE_URL}/movie/${id}/videos?language=pt-BR`,

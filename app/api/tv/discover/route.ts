@@ -80,8 +80,27 @@ function hasZeroVotes(serie: Serie): boolean {
     return serie.vote_average === 0 && serie.vote_count === 0;
 }
 
+// Função para filtrar por texto (busca por nome)
+function filterByText(shows: Serie[], searchText: string): Serie[] {
+    if (!searchText) return shows;
+
+    const normalizedSearch = searchText.toLowerCase().trim();
+
+    return shows.filter(show => {
+        const title = show.name?.toLowerCase() || '';
+        const originalTitle = show.original_name?.toLowerCase() || '';
+        return title.includes(normalizedSearch) || originalTitle.includes(normalizedSearch);
+    });
+}
+
 // Função principal de filtragem de séries
-function filterTVShows(shows: Serie[]): Serie[] {
+function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[] {
+    let excludedCountriesList: string[] | null = null;
+
+    if (excludeCountries) {
+        excludedCountriesList = excludeCountries.split(',').map(c => c.trim().toUpperCase());
+    }
+
     return shows.filter(show => {
         // Filtra séries sem votação
         if (hasZeroVotes(show)) return false;
@@ -94,6 +113,16 @@ function filterTVShows(shows: Serie[]): Serie[] {
 
         // Filtra títulos específicos da lista bloqueada
         if (isTitleBlocked(show.name)) return false;
+
+        // Filtra por país de origem excluído (se especificado)
+        if (excludedCountriesList && excludedCountriesList.length > 0) {
+            if (show.origin_country && show.origin_country.length > 0) {
+                const hasExcludedCountry = show.origin_country.some(country =>
+                    excludedCountriesList!.includes(country)
+                );
+                if (hasExcludedCountry) return false;
+            }
+        }
 
         return true;
     });
@@ -131,52 +160,72 @@ export async function GET(request: NextRequest) {
     const withRuntimeGte = searchParams.get('with_runtime.gte') || '';
     const withRuntimeLte = searchParams.get('with_runtime.lte') || '';
 
+    // Parâmetro para busca por texto
+    const withTextQuery = searchParams.get('with_text_query') || '';
+
     const excludeCountries = searchParams.get('exclude_countries');
 
     try {
-        let url = `${TMDB_BASE_URL}/discover/tv?include_adult=false&include_null_first_air_dates=false&language=pt-BR&page=${page}&sort_by=${sortBy}`;
+        // Se houver busca por texto, usar o endpoint de search em vez de discover
+        let url;
+        let data;
 
-        if (withGenres) url += `&with_genres=${withGenres}`;
-        if (firstAirDateYear) url += `&first_air_date_year=${firstAirDateYear}`;
-        if (voteAverageGte) url += `&vote_average.gte=${voteAverageGte}`;
-        if (voteAverageLte) url += `&vote_average.lte=${voteAverageLte}`;
-        if (withKeywords) url += `&with_keywords=${withKeywords}`;
-        if (withOriginCountry) url += `&with_origin_country=${withOriginCountry}`;
-        if (withoutGenres) url += `&without_genres=${withoutGenres}`;
-        if (withRuntimeGte) url += `&with_runtime.gte=${withRuntimeGte}`;
-        if (withRuntimeLte) url += `&with_runtime.lte=${withRuntimeLte}`;
+        if (withTextQuery) {
+            // Usar endpoint de search para busca por texto
+            url = `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(withTextQuery)}&language=pt-BR&page=${page}&include_adult=false&sort_by=${sortBy}`;
 
-        const response = await fetch(url, {
-            headers: {
-                Authorization: `Bearer ${TMDB_TOKEN}`,
-                'Content-Type': 'application/json',
-            },
-        });
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${TMDB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        if (!response.ok) {
-            throw new Error(`Erro na API: ${response.status}`);
+            if (!response.ok) {
+                throw new Error(`Erro na API: ${response.status}`);
+            }
+
+            data = await response.json();
+        } else {
+            // Usar endpoint de discover para filtros normais
+            url = `${TMDB_BASE_URL}/discover/tv?include_adult=false&include_null_first_air_dates=false&language=pt-BR&page=${page}&sort_by=${sortBy}`;
+
+            if (withGenres) url += `&with_genres=${withGenres}`;
+            if (firstAirDateYear) url += `&first_air_date_year=${firstAirDateYear}`;
+            if (voteAverageGte) url += `&vote_average.gte=${voteAverageGte}`;
+            if (voteAverageLte) url += `&vote_average.lte=${voteAverageLte}`;
+            if (withKeywords) url += `&with_keywords=${withKeywords}`;
+            if (withOriginCountry) url += `&with_origin_country=${withOriginCountry}`;
+            if (withoutGenres) url += `&without_genres=${withoutGenres}`;
+            if (withRuntimeGte) url += `&with_runtime.gte=${withRuntimeGte}`;
+            if (withRuntimeLte) url += `&with_runtime.lte=${withRuntimeLte}`;
+
+            const response = await fetch(url, {
+                headers: {
+                    Authorization: `Bearer ${TMDB_TOKEN}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Erro na API: ${response.status}`);
+            }
+
+            data = await response.json();
         }
 
-        const data = await response.json();
+        // Converter tipos para garantir que vote_average e vote_count são números
+        const seriesWithCorrectTypes = data.results.map((serie: Serie) => ({
+            ...serie,
+            vote_average: typeof serie.vote_average === 'string' ? parseFloat(serie.vote_average) : serie.vote_average,
+            vote_count: typeof serie.vote_count === 'string' ? parseInt(serie.vote_count) : serie.vote_count,
+        }));
 
-        let filteredByContent = filterTVShows(data.results);
+        let filteredByContent = filterTVShows(seriesWithCorrectTypes, excludeCountries);
 
-        // Aplicar filtro de países excluídos (se necessário)
-        if (excludeCountries) {
-            const excludedCountriesList = excludeCountries.split(',').map(c => c.trim().toUpperCase());
-
-            filteredByContent = filteredByContent.filter((serie: Serie) => {
-                // Se não tem origin_country, mantém (não conseguimos verificar)
-                if (!serie.origin_country || serie.origin_country.length === 0) {
-                    return true;
-                }
-                // Verifica se algum país está na lista de excluídos
-                const hasExcludedCountry = serie.origin_country.some(country =>
-                    excludedCountriesList.includes(country)
-                );
-                // Mantém apenas séries que NÃO têm países excluídos
-                return !hasExcludedCountry;
-            });
+        // Se veio do discover mas tem texto de busca, aplicar filtro de texto adicional
+        if (!withTextQuery && withTextQuery) {
+            filteredByContent = filterByText(filteredByContent, withTextQuery);
         }
 
         // Calcular totais atualizados baseados na filtragem
@@ -215,6 +264,7 @@ export async function GET(request: NextRequest) {
             current_sort: sortBy,
             filtered: !!excludeCountries || filteredByContent.length !== data.results.length,
             excluded_countries: excludeCountries ? excludeCountries.split(',') : null,
+            is_search: !!withTextQuery,
         });
 
     } catch (error) {

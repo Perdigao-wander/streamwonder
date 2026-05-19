@@ -28,6 +28,7 @@ type TMDBTVShowResponse = {
     number_of_seasons: number;
     number_of_episodes: number;
     vote_average: number;
+    vote_count: number;
     genres: TMDBGenre[];
     seasons: TMDBSeason[];
 };
@@ -55,6 +56,7 @@ type TVShowAPIResponse = {
     number_of_seasons: number;
     number_of_episodes: number;
     vote_average: number;
+    vote_count: number;
     genres: TMDBGenre[];
     seasons: ProcessedSeason[];
     media_type: 'tv';
@@ -160,6 +162,7 @@ export async function GET(
             number_of_seasons: data.number_of_seasons,
             number_of_episodes: data.number_of_episodes,
             vote_average: data.vote_average,
+            vote_count: data.vote_count,
             adult: data.adult,
             genres: data.genres,
             seasons: seasons,

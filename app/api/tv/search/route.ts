@@ -66,6 +66,38 @@ function hasZeroVotes(serie: Serie): boolean {
     return serie.vote_average === 0 && serie.vote_count === 0;
 }
 
+// Função para aplicar filtros adicionais (gêneros, ano, rating)
+function applyAdditionalFilters(
+    shows: Serie[],
+    withGenres: string,
+    firstAirDateYear: string,
+    voteAverageGte: string
+): Serie[] {
+    return shows.filter(show => {
+        // Filtrar por gêneros
+        if (withGenres) {
+            const genreIds = withGenres.split(',').map(Number);
+            const hasGenre = genreIds.some(genreId =>
+                show.genre_ids?.includes(genreId)
+            );
+            if (!hasGenre) return false;
+        }
+
+        // Filtrar por ano de estreia
+        if (firstAirDateYear && show.first_air_date) {
+            const showYear = show.first_air_date.split('-')[0];
+            if (showYear !== firstAirDateYear) return false;
+        }
+
+        // Filtrar por avaliação mínima
+        if (voteAverageGte && show.vote_average) {
+            if (show.vote_average < parseFloat(voteAverageGte)) return false;
+        }
+
+        return true;
+    });
+}
+
 // Função principal de filtragem de séries
 function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[] {
     let excludedCountriesList: string[] | null = null;
@@ -99,23 +131,6 @@ function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[
 
         return true;
     });
-}
-
-// Função para calcular o total de resultados considerando a filtragem
-function calculateFilteredTotal(
-    originalTotal: number,
-    filteredCount: number,
-    originalResults: Serie[]
-): { filteredTotalResults: number; filteredTotalPages: number } {
-    const filterRatio = originalResults.length > 0
-        ? filteredCount / originalResults.length
-        : 1;
-
-    const filteredTotalResults = Math.floor(originalTotal * filterRatio);
-    const ITEMS_PER_PAGE = 20;
-    const filteredTotalPages = Math.ceil(filteredTotalResults / ITEMS_PER_PAGE);
-
-    return { filteredTotalResults, filteredTotalPages };
 }
 
 // Cache para IMDb IDs de séries
@@ -165,22 +180,33 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('query');
     const page = searchParams.get('page') || '1';
+
+    // Receber filtros da URL
+    const sortBy = searchParams.get('sort_by') || 'vote_count.desc';
+    const withGenres = searchParams.get('with_genres') || '';
+    const firstAirDateYear = searchParams.get('first_air_date_year') || '';
+    const voteAverageGte = searchParams.get('vote_average.gte') || '';
     const excludeCountries = searchParams.get('exclude_countries');
+    const withOriginCountry = searchParams.get('with_origin_country') || '';
 
     if (!query) {
         return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
     }
 
     try {
-        const response = await fetch(
-            `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=pt-BR&page=${page}&include_adult=false`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TMDB_TOKEN}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        // Construir URL base da busca
+        let url = `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=pt-BR&page=${page}&include_adult=false`;
+
+        if (withOriginCountry) url += `&with_origin_country=${withOriginCountry}`;
+
+        url += `&sort_by=${sortBy}`;
+
+        const response = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${TMDB_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`Erro na API: ${response.status}`);
@@ -195,15 +221,18 @@ export async function GET(request: NextRequest) {
             vote_count: typeof serie.vote_count === 'string' ? parseInt(serie.vote_count) : serie.vote_count,
         }));
 
-        // Aplicar todos os filtros (incluindo países excluídos)
-        const filteredSeries = filterTVShows(seriesWithCorrectTypes, excludeCountries);
+        // Primeiro aplicar filtros básicos (conteúdo adulto, países excluídos, etc.)
+        let filteredSeries = filterTVShows(seriesWithCorrectTypes, excludeCountries);
 
-        // Calcular totais atualizados baseados na filtragem
-        const { filteredTotalResults, filteredTotalPages } = calculateFilteredTotal(
-            data.total_results,
-            filteredSeries.length,
-            seriesWithCorrectTypes
+        // Depois aplicar filtros adicionais (gêneros, ano, rating)
+        filteredSeries = applyAdditionalFilters(
+            filteredSeries,
+            withGenres,
+            firstAirDateYear,
+            voteAverageGte
         );
+
+        console.log(`Total encontrado: ${data.results.length}, Após filtros: ${filteredSeries.length}`);
 
         // Buscar IMDb IDs em paralelo para todas as séries filtradas
         const seriesWithImdb = await Promise.all(
@@ -230,19 +259,16 @@ export async function GET(request: NextRequest) {
             })
         );
 
+        // Calcular total de páginas baseado nas séries filtradas
+        const ITEMS_PER_PAGE = 20;
+        const filteredTotalPages = Math.ceil(seriesWithImdb.length / ITEMS_PER_PAGE);
+
         // Retornar resposta com totais atualizados
         return NextResponse.json({
             page: parseInt(page),
             total_pages: filteredTotalPages,
-            total_results: filteredTotalResults,
+            total_results: seriesWithImdb.length,
             results: seriesWithImdb,
-            filter_stats: {
-                original_total: data.total_results,
-                original_results_count: data.results.length,
-                filtered_results_count: filteredSeries.length,
-                removed_count: data.results.length - filteredSeries.length,
-                excluded_countries: excludeCountries ? excludeCountries.split(',') : null
-            }
         });
 
     } catch (error) {

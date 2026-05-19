@@ -1,3 +1,4 @@
+// api/movies/search/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
@@ -18,7 +19,6 @@ type Movie = {
     imdb_id?: string | null;
 }
 
-// LISTA DE TÍTULOS BLOQUEADOS (EXATOS OU PARCIAIS)
 const BLOCKED_TITLES = [
     'Tayuan',
     'Rita',
@@ -27,7 +27,6 @@ const BLOCKED_TITLES = [
 
 function isAdultContent(title: string): boolean {
     const normalizedTitle = title.toLowerCase().trim();
-
     const adultIndicators = [
         'ninfomaniaca','ninfomaníaca', 'nymphomaniac','Hot Girls',
         '50 tons', 'fifty shades',
@@ -39,18 +38,13 @@ function isAdultContent(title: string): boolean {
         'porn', 'erotic', 'adult',
         'sexy', 'sensual', 'xxx'
     ];
-
-    return adultIndicators.some(indicator =>
-        normalizedTitle.includes(indicator)
-    );
+    return adultIndicators.some(indicator => normalizedTitle.includes(indicator));
 }
 
 function isTitleBlocked(title: string): boolean {
     const normalizedTitle = title.toLowerCase().trim();
-
     return BLOCKED_TITLES.some(blockedTitle => {
         const normalizedBlocked = blockedTitle.toLowerCase().trim();
-        // Bloqueio parcial (se o título CONTER alguma palavra proibida)
         return normalizedTitle.includes(normalizedBlocked);
     });
 }
@@ -59,61 +53,47 @@ function hasZeroVotes(movie: Movie): boolean {
     return movie.vote_average === 0 && movie.vote_count === 0;
 }
 
-function filterMovies(movies: Movie[]): Movie[] {
-    let adultFlagCount = 0;
-    let adultContentCount = 0;
-    let blockedTitleCount = 0;
-    let zeroVotesCount = 0;
-
-    const filtered = movies.filter(movie => {
-        // 1. Filtra filmes sem votação (vote_average = 0 e vote_count = 0)
-        if (hasZeroVotes(movie)) {
-            zeroVotesCount++;
-            return false;
+// Função para aplicar filtros adicionais (gêneros, ano, rating)
+function applyAdditionalFilters(
+    movies: Movie[],
+    withGenres: string,
+    primaryReleaseYear: string,
+    voteAverageGte: string
+): Movie[] {
+    return movies.filter(movie => {
+        // Filtrar por gêneros
+        if (withGenres) {
+            const genreIds = withGenres.split(',').map(Number);
+            const hasGenre = genreIds.some(genreId =>
+                movie.genre_ids?.includes(genreId)
+            );
+            if (!hasGenre) return false;
         }
 
-        // 2. Filtra filmes adultos (flag da API)
-        if (movie.adult) {
-            adultFlagCount++;
-            return false;
+        // Filtrar por ano de lançamento
+        if (primaryReleaseYear && movie.release_date) {
+            const movieYear = movie.release_date.split('-')[0];
+            if (movieYear !== primaryReleaseYear) return false;
         }
 
-        // 3. Filtra por conteúdo adulto no título
-        if (isAdultContent(movie.title)) {
-            adultContentCount++;
-            return false;
-        }
-
-        // 4. Filtra títulos específicos da lista bloqueada
-        if (isTitleBlocked(movie.title)) {
-            blockedTitleCount++;
-            return false;
+        // Filtrar por avaliação mínima
+        if (voteAverageGte && movie.vote_average) {
+            if (movie.vote_average < parseFloat(voteAverageGte)) return false;
         }
 
         return true;
     });
-
-    return filtered;
 }
 
-function calculateFilteredTotal(
-    originalTotal: number,
-    filteredCount: number,
-    originalResults: Movie[]
-): { filteredTotalResults: number; filteredTotalPages: number } {
-    // Calcula a proporção de filmes que passaram pelo filtro
-    const filterRatio = originalResults.length > 0
-        ? filteredCount / originalResults.length
-        : 1;
-
-    // Aplica a mesma proporção ao total de resultados
-    const filteredTotalResults = Math.floor(originalTotal * filterRatio);
-
-    // Calcula o novo total de páginas (assumindo 20 filmes por página, padrão da API)
-    const ITEMS_PER_PAGE = 20;
-    const filteredTotalPages = Math.ceil(filteredTotalResults / ITEMS_PER_PAGE);
-
-    return { filteredTotalResults, filteredTotalPages };
+function filterMovies(movies: Movie[]): Movie[] {
+    const filtered = movies.filter(movie => {
+        if (hasZeroVotes(movie)) return false;
+        if (movie.adult) return false;
+        if (isAdultContent(movie.title)) return false;
+        if (isTitleBlocked(movie.title)) return false;
+        return true;
+    });
+    return filtered;
 }
 
 export async function GET(request: NextRequest) {
@@ -121,21 +101,28 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('query');
     const page = searchParams.get('page') || '1';
 
+    // Receber filtros da URL
+    const sortBy = searchParams.get('sort_by') || 'popularity.desc';
+    const withGenres = searchParams.get('with_genres') || '';
+    const primaryReleaseYear = searchParams.get('primary_release_year') || '';
+    const voteAverageGte = searchParams.get('vote_average.gte') || '';
+
     if (!query) {
         return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
     }
 
     try {
-        // 1. Buscar filmes da API
-        const response = await fetch(
-            `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=pt-BR&page=${page}&include_adult=false`,
-            {
-                headers: {
-                    Authorization: `Bearer ${TMDB_TOKEN}`,
-                    'Content-Type': 'application/json',
-                },
-            }
-        );
+        // Construir URL base da busca (sem filtros, pois a API de search não suporta)
+        let url = `${TMDB_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&language=pt-BR&page=${page}&include_adult=false`;
+
+        url += `&sort_by=${sortBy}`;
+
+        const response = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${TMDB_TOKEN}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`Erro na API: ${response.status}`);
@@ -143,8 +130,7 @@ export async function GET(request: NextRequest) {
 
         const data = await response.json();
 
-        // Converter tipos para consistentes com o filter
-        const moviesWithCorrectTypes = data.results.map((movie: any) => ({
+        const moviesWithCorrectTypes = data.results.map((movie: Movie) => ({
             ...movie,
             vote_count: typeof movie.vote_count === 'string' ? parseInt(movie.vote_count) : movie.vote_count,
             vote_average: typeof movie.vote_average === 'string' ? parseFloat(movie.vote_average) : movie.vote_average,
@@ -152,17 +138,17 @@ export async function GET(request: NextRequest) {
             genre_ids: Array.isArray(movie.genre_ids) ? movie.genre_ids : [],
         }));
 
-        // 2. Aplicar todos os filtros
-        const filteredMovies = filterMovies(moviesWithCorrectTypes);
+        // Primeiro aplicar filtros básicos (conteúdo adulto, etc.)
+        let filteredMovies = filterMovies(moviesWithCorrectTypes);
 
-        // 3. Calcular totais atualizados baseados na filtragem
-        const { filteredTotalResults, filteredTotalPages } = calculateFilteredTotal(
-            data.total_results,
-            filteredMovies.length,
-            moviesWithCorrectTypes
+        // Depois aplicar filtros adicionais (gêneros, ano, rating)
+        filteredMovies = applyAdditionalFilters(
+            filteredMovies,
+            withGenres,
+            primaryReleaseYear,
+            voteAverageGte
         );
 
-        // 4. Mapear para o formato de saída
         const movies = filteredMovies.map((movie: Movie) => ({
             id: movie.id,
             title: movie.title,
@@ -175,11 +161,14 @@ export async function GET(request: NextRequest) {
             genre_ids: movie.genre_ids,
         }));
 
-        // 5. Retornar resposta com os totais atualizados
+        // Calcular total de páginas baseado nos filmes filtrados
+        const ITEMS_PER_PAGE = 20;
+        const filteredTotalPages = Math.ceil(movies.length / ITEMS_PER_PAGE);
+
         return NextResponse.json({
             page: parseInt(page),
             total_pages: filteredTotalPages,
-            total_results: filteredTotalResults,
+            total_results: movies.length,
             results: movies,
         });
 
