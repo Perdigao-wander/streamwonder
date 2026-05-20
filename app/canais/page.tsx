@@ -4,7 +4,7 @@ import ChannelsContent from './ChannelsContent';
 
 // Metadados para a página de Canais de TV
 export const metadata: Metadata = {
-    title: 'Canais de TV | StreamingWonder',
+    title: 'Canais de TV',
     description: 'Assista os melhores canais de TV online grátis. Canais abertos, filmes, séries, esportes, notícias, animes e muito mais. Atualizado diariamente.',
     keywords: [
         'canais de tv',
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         'tv grátis'
     ],
     openGraph: {
-        title: 'Canais de TV | StreamingWonder',
+        title: 'Canais de TV',
         description: 'Assista os melhores canais de TV online grátis. Canais abertos, filmes, séries, esportes, notícias, animes e muito mais.',
         url: `https://streamwonder.vercel.app/canais`,
         siteName: 'Plataforma de Streaming',

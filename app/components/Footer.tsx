@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { PlayCircle, Heart, Tv, Film, BookOpen, Tv2, ExternalLink, Satellite, Drama, JapaneseYen } from 'lucide-react';
+import { PlayCircle, Tv, Film, BookOpen, Tv2, ExternalLink, Satellite, Drama, JapaneseYen, BrainCircuit } from 'lucide-react';
 import Link from 'next/link';
 
 const Footer = () => {
@@ -60,8 +60,8 @@ const Footer = () => {
                             doramas, animes, HQs e canais ao vivo totalmente gratuitos.
                         </p>
                         <div className="flex items-center gap-2 text-sm text-gray-500">
-                            <Heart className="w-4 h-4 text-red-500 fill-current" />
-                            <span>Feito com amor para você</span>
+                            <BrainCircuit className="w-4 h-4 text-blue-500 fill-current" />
+                            <span>Treinado a logica de programação</span>
                         </div>
                     </div>
 
@@ -131,16 +131,16 @@ const Footer = () => {
                         </h3>
                         <ul className="space-y-2 text-sm">
                             <li className="text-gray-400">
-                                <span className="text-gray-500">Versão:</span> 1.0.0
+                                <span className="text-gray-500">Versão:</span> 1.2.0
                             </li>
                             <li className="text-gray-400">
-                                <span className="text-gray-500">Plataforma:</span> Next.js 15
+                                <span className="text-gray-500">Plataforma:</span> Next.js 16
                             </li>
                             <li className="text-gray-400">
-                                <span className="text-gray-500">Design:</span> Moderno & Responsivo
+                                <span className="text-gray-500">Design:</span> Shadcn & Tailwind Css
                             </li>
                             <li className="text-gray-400">
-                                <span className="text-gray-500">Streaming:</span> Grátis
+                                <span className="text-gray-500">Streaming:</span> APIs de terceiros
                             </li>
                         </ul>
 

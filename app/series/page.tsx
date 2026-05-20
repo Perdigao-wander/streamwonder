@@ -4,7 +4,7 @@ import SeriesContent from './SeriesContent';
 
 // Metadados para a página de Séries
 export const metadata: Metadata = {
-    title: 'Séries | StreamingWonder',
+    title: 'Séries',
     description: 'Assista as melhores séries online. Descubra séries de ação, drama, comédia, ficção científica, terror e muito mais. Atualizado diariamente.',
     keywords: [
         'séries',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
         'seriados'
     ],
     openGraph: {
-        title: 'Séries | StreamingWonder',
+        title: 'Séries',
         description: 'Assista as melhores séries online. Descubra séries de ação, drama, comédia, ficção científica, terror e muito mais.',
         url: `https://streamwonder.vercel.app/series`,
         siteName: 'Plataforma de Streaming',

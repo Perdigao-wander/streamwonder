@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // Importe usePathname
-import { Menu, X, PlayCircle, BookOpen, Film, Tv, Home, Drama, JapaneseYen, Satellite  } from 'lucide-react';
+import { Menu, X, PlayCircle, BookOpen, Film, Tv, Home, Drama, JapaneseYen, Satellite } from 'lucide-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);

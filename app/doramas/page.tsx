@@ -4,7 +4,7 @@ import DoramasContent from './DoramasContent';
 
 // Metadados estáticos para a página de Doramas
 export const metadata: Metadata = {
-    title: 'Doramas | StreamingWonder',
+    title: 'Doramas',
     description: 'Assista os melhores Doramas coreanos online. Descubra séries coreanas emocionantes, romances, comédias e muito mais. Atualizado diariamente.',
     keywords: [
         'doramas',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         'séries coreanas online'
     ],
     openGraph: {
-        title: 'Doramas | StreamingWonder',
+        title: 'Doramas',
         description: 'Assista os melhores Doramas coreanos online. Descubra séries coreanas emocionantes, romances, comédias e muito mais.',
         url: `https://streamwonder.vercel.app/doramas`,
         siteName: 'Plataforma de Streaming',

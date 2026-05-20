@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import AnimesContent from './AnimesContent';
 
 export const metadata: Metadata = {
-    title: 'Animes | StreamingWonder',
+    title: 'Animes',
     description: 'Assista os melhores Animes legendados e dublados. Descubra animes de ação, aventura, romance, comédia e muito mais. Atualizado diariamente.',
     keywords: [
         'animes',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         'animes aventura'
     ],
     openGraph: {
-        title: 'Animes | StreamingWonder',
+        title: 'Animes',
         description: 'Assista os melhores Animes legendados e dublados. Descubra animes de ação, aventura, romance, comédia e muito mais.',
         url: `https://streamwonder.vercel.app/animes`,
         siteName: 'Plataforma de Streaming',

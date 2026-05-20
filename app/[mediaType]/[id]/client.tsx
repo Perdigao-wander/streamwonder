@@ -357,7 +357,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
     if (mediaType === 'movie' && movieData) {
         return (
             <>
-                <div className="min-h-screen">
+                <div className="min-h-52 mt-16">
                     {movieBackdrop && (
                         <div className="fixed inset-0 opacity-20 pointer-events-none">
                             <img
@@ -368,18 +368,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
                         </div>
                     )}
-
-                    <div className="sticky top-0 z-20 bg-black/50 backdrop-blur-md border-b border-white/10">
-                        <div className="container mx-auto px-4 py-3">
-                            <button
-                                onClick={handleBack}
-                                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                                <span>Voltar</span>
-                            </button>
-                        </div>
-                    </div>
 
                     <div className="container mx-auto px-4 py-8">
                         <div className="flex flex-col lg:flex-row gap-8">
@@ -476,7 +464,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
     if (mediaType === 'tv' && tvData) {
         return (
             <>
-                <div className="min-h-screen">
+                <div className="min-h-40 mt-16">
                     {tvBackdrop && (
                         <div className="fixed inset-0 opacity-20 pointer-events-none">
                             <img
@@ -487,20 +475,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
                         </div>
                     )}
-
-                    <div className="sticky top-0 z-20 bg-black/50 backdrop-blur-md border-b border-white/10">
-                        <div className="container mx-auto px-4 py-3">
-                            <button
-                                onClick={handleBack}
-                                className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
-                            >
-                                <ArrowLeft className="w-5 h-5" />
-                                <span>Voltar</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="container mx-auto px-4 py-8">
+                   <div className="container mx-auto px-4 py-8">
                         <div className="flex flex-col lg:flex-row gap-8 mb-8">
                             <div className="flex-shrink-0 w-56 lg:w-64 mx-auto lg:mx-0">
                                 <img
@@ -650,7 +625,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                                                 <button
                                                     key={episode.id}
                                                     onClick={() => handleWatchEpisode(selectedSeason, episode.episode_number)}
-                                                    className="group cursor-pointer relative aspect-video rounded-xl overflow-hidden transition-all duration-300 border-2 border-white/5 hover:border-indigo-500/50 hover:scale-[1.02] hover:shadow-lg"
+                                                    className="group cursor-pointer relative rounded-xl aspect-video overflow-hidden transition-all duration-300 border-2 border-white/5 hover:border-indigo-500/50 hover:scale-[1.02] hover:shadow-lg"
                                                 >
                                                     <div className="absolute inset-0">
                                                         {episode.still_path ? (

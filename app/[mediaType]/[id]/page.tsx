@@ -8,7 +8,7 @@ interface PageProps {
     }>;
 }
 
-// Função para buscar dados no servidor
+
 async function fetchMediaData(mediaType: string, id: string) {
     try {
         const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const mediaTypeText = mediaType === 'movie' ? 'Filme' : 'Série';
 
     return {
-        title: `${title} (${year}) | StreamingWonder`,
+        title: `${title} (${year})`,
         description: `${mediaTypeText}: ${title} (${year}). ${overview.substring(0, 160)} ${rating !== 'N/A' ? `Nota: ${rating}/10.` : ''}`,
 
         openGraph: {

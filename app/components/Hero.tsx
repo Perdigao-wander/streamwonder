@@ -210,7 +210,7 @@ const Hero = () => {
         <>
             <div
                 ref={heroContainerRef}
-                className="relative h-[40vh] md:h-[80vh] w-full overflow-hidden group"
+                className="relative h-[40vh] md:h-[80vh] w-full mt-8 overflow-hidden group"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}

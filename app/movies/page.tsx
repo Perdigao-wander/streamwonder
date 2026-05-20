@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import MoviesContent from './MoviesContent';
 
 export const metadata: Metadata = {
-    title: 'Filmes | StreamingWonder',
+    title: 'Filmes',
     description: 'Assista os melhores filmes online. Descubra filmes de ação, comédia, romance, terror, ficção científica e muito mais. Atualizado diariamente.',
     keywords: [
         'filmes',
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         'streaming filmes'
     ],
     openGraph: {
-        title: 'Filmes | StreamingWonder',
+        title: 'Filmes',
         description: 'Assista os melhores filmes online. Descubra filmes de ação, comédia, romance, terror, ficção científica e muito mais.',
         url: `https://streamwonder.vercel.app/movies`,
         siteName: 'Plataforma de Streaming',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Filmes | StreamingWonder',
+        title: 'Filmes',
         description: 'Assista os melhores filmes online. Descubra filmes de ação, comédia, romance, terror, ficção científica e muito mais.',
         images: ['/fimes.jpg'],
     },
