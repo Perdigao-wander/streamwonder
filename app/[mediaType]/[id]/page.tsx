@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const mediaTypeText = mediaType === 'movie' ? 'Filme' : 'Série';
 
     return {
-        title: `${title} (${year}) | Assistir ${mediaTypeText} Online | Plataforma de Streaming`,
+        title: `${title} (${year}) | StreamingWonder`,
         description: `${mediaTypeText}: ${title} (${year}). ${overview.substring(0, 160)} ${rating !== 'N/A' ? `Nota: ${rating}/10.` : ''}`,
 
         openGraph: {
