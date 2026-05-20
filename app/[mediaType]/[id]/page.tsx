@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const rating = data.vote_average?.toFixed(1) || 'N/A';
     const posterUrl = data.poster_path
         ? `https://image.tmdb.org/t/p/original${data.poster_path}`
-        : `${process.env.NEXT_PUBLIC_BASE_URL}/og-image.jpg`;
+        : `https://streamwonder.vercel.app/og-image.jpg`;
     const backdropUrl = data.backdrop_path
         ? `https://image.tmdb.org/t/p/original${data.backdrop_path}`
         : posterUrl;
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         openGraph: {
             title: `${title} (${year}) - ${rating !== 'N/A' ? `${rating}/10` : ''}`,
             description: overview.substring(0, 200),
-            url: `${process.env.NEXT_PUBLIC_BASE_URL}/${mediaType}/${id}`,
+            url: `https://streamwonder.vercel.app/${mediaType}/${id}`,
             siteName: 'Plataforma de Streaming',
             images: [
                 {
@@ -109,7 +109,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
 
         alternates: {
-            canonical: `${process.env.NEXT_PUBLIC_BASE_URL}/${mediaType}/${id}`,
+            canonical: `https://streamwonder.vercel.app/${mediaType}/${id}`,
         },
     };
 }
