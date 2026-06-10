@@ -1,9 +1,9 @@
 // hooks/useSeriesFetch.ts
 import { useState, useCallback } from 'react';
-import { TVShow } from '@/types/media';
+import { MediaItem } from '@/types/media';
 
 export function useSeriesFetch() {
-    const [series, setSeries] = useState<TVShow[]>([]);
+    const [series, setSeries] = useState<MediaItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
