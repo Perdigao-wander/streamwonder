@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Calendar, Star, Info, Film, Clock } from 'lucide-react';
+import { useGenres } from '@/hooks/useGenres';
 
 interface Genre {
     id: number;
@@ -40,24 +41,8 @@ type Movie = {
 }
 
 const MovieInfoModal = ({ movie, onClose, onWatch }: MovieInfoModalProps) => {
-    const [genres, setGenres] = useState<Genre[]>([]);
-    const [loadingGenres, setLoadingGenres] = useState(true);
     const [movieDetails, setMovieDetails] = useState<Movie | null>(null);
-    // Buscar gêneros
-    useEffect(() => {
-        const fetchGenres = async () => {
-            try {
-                const response = await fetch('/api/movies/genres');
-                const data = await response.json();
-                setGenres(data);
-            } catch (error) {
-                console.error('Erro ao buscar gêneros:', error);
-            } finally {
-                setLoadingGenres(false);
-            }
-        };
-        fetchGenres();
-    }, []);
+    const { genres } = useGenres();
 
     useEffect(() => {
         const fetchMovieDetails = async () => {
@@ -186,7 +171,7 @@ const MovieInfoModal = ({ movie, onClose, onWatch }: MovieInfoModalProps) => {
                             </div>
 
                             {/* Gêneros */}
-                            {!loadingGenres && genreNames.length > 0 && (
+                            {genreNames.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {genreNames.map((genre, index) => (
                                         <span

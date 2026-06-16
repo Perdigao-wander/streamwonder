@@ -2,11 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { X, Calendar, Star, Info, Tv, Award, Clock } from 'lucide-react';
-
-interface Genre {
-    id: number;
-    name: string;
-}
+import {useGenres} from "@/hooks/useGenres";
 
 interface SeriesInfoModalProps {
     show: {
@@ -26,24 +22,7 @@ interface SeriesInfoModalProps {
 }
 
 const SeriesInfoModal = ({ show, onClose, onWatch }: SeriesInfoModalProps) => {
-    const [genres, setGenres] = useState<Genre[]>([]);
-    const [loadingGenres, setLoadingGenres] = useState(true);
-
-    // Buscar gêneros para exibir os nomes
-    useEffect(() => {
-        const fetchGenres = async () => {
-            try {
-                const response = await fetch('/api/tv/genres');
-                const data = await response.json();
-                setGenres(data);
-            } catch (error) {
-                console.error('Erro ao buscar gêneros:', error);
-            } finally {
-                setLoadingGenres(false);
-            }
-        };
-        fetchGenres();
-    }, []);
+    const { genres } = useGenres();
 
     // Mapear IDs dos gêneros para nomes
     const getGenreNames = () => {
@@ -145,7 +124,7 @@ const SeriesInfoModal = ({ show, onClose, onWatch }: SeriesInfoModalProps) => {
                             </div>
 
                             {/* Gêneros */}
-                            {!loadingGenres && genreNames.length > 0 && (
+                            {genreNames.length > 0 && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {genreNames.map((genre, index) => (
                                         <span
