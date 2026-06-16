@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { JapaneseYen, SearchIcon, X } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useFilterPersistence } from '@/hooks/useFilterPersistence';
@@ -8,10 +8,10 @@ import { MediaSearchBar } from '@/components/MediaSearchBar';
 import { MediaFiltersPanel } from '@/components/MediaFiltersPanel';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaPagination } from '@/components/MediaPagination';
-import { MediaItem, Genre } from '@/types/media';
+import { MediaItem } from '@/types/media';
 import { useGenres } from '@/hooks/useGenres';
 
-
+const ANIMATION_GENRE_ID = 16;
 
 export default function AnimesPage() {
     const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('animes', 'vote_count.desc');
@@ -24,14 +24,16 @@ export default function AnimesPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
 
+    // Controla se o gênero padrão já foi aplicado (evita loop)
+    const hasSetDefaultGenre = useRef(false);
+
     const sortOptions = [
         { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
-        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
-        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
         { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
 
+    // Busca os animes
     const fetchAnimes = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) setLoadingMore(true);
         else setLoading(true);
@@ -80,11 +82,24 @@ export default function AnimesPage() {
         }
     }, [filters]);
 
+    // Sincroniza o campo de busca temporário com o filtro atual
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTempSearchQuery(filters.searchQuery);
     }, [filters.searchQuery]);
 
+    // Inicialização: aplica o gênero "Animação" se nenhum outro estiver selecionado
+    useEffect(() => {
+        if (isInitialized && !hasSetDefaultGenre.current) {
+            if (filters.selectedGenres.length === 0) {
+                // Aplica o gênero 16 (Animação) como padrão
+                updateFilter({ selectedGenres: [ANIMATION_GENRE_ID] });
+            }
+            hasSetDefaultGenre.current = true;
+        }
+    }, [isInitialized, filters.selectedGenres, updateFilter]);
+
+    // Busca os animes sempre que os filtros mudarem
     useEffect(() => {
         if (isInitialized) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -92,6 +107,7 @@ export default function AnimesPage() {
         }
     }, [filters, isInitialized, fetchAnimes]);
 
+    // Handlers
     const performSearch = () => {
         if (tempSearchQuery === filters.searchQuery) return;
         updateFilter({ searchQuery: tempSearchQuery, currentPage: 1 });
@@ -137,6 +153,18 @@ export default function AnimesPage() {
             fetchAnimes(filters.currentPage + 1, true);
             updateFilter({ currentPage: filters.currentPage + 1 });
         }
+    };
+
+    // Reseta os filtros mantendo o gênero "Animação" ativo
+    const handleResetFilters = () => {
+        updateFilter({
+            searchQuery: '',
+            selectedGenres: [ANIMATION_GENRE_ID],
+            sortBy: 'vote_count.desc',
+            selectedYear: '',
+            minRating: '',
+            currentPage: 1,
+        });
     };
 
     const handleShowInfo = (anime: MediaItem) => {
@@ -207,7 +235,7 @@ export default function AnimesPage() {
                             genres={genres}
                             selectedGenres={filters.selectedGenres}
                             onToggleGenre={toggleGenre}
-                            onClearFilters={resetFilters}
+                            onClearFilters={handleResetFilters}  // ← usa o reset com animação
                             activeFiltersCount={activeFiltersCount}
                             yearLabel="Ano de estreia"
                         />
@@ -258,7 +286,7 @@ export default function AnimesPage() {
                                     ? `Nenhum anime encontrado para "${filters.searchQuery}".`
                                     : 'Nenhum anime encontrado com os filtros selecionados.'}
                             </div>
-                            <button onClick={resetFilters} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            <button onClick={handleResetFilters} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                                 Limpar Filtros
                             </button>
                         </div>

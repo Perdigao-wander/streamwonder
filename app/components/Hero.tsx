@@ -170,7 +170,7 @@ const Hero = () => {
             try {
                 const response = await fetch('/api/movies/popular');
                 const data = await response.json();
-                setMovies(data.slice(0, 5));
+                setMovies(data.slice(0, 8));
                 setLoading(false);
             } catch (error) {
                 console.error('Erro ao buscar filmes:', error);

@@ -105,7 +105,7 @@ export async function GET() {
 
         // 1. Buscar filmes populares
         const listResponse = await fetch(
-            `${TMDB_BASE_URL}/movie/popular?language=pt-BR&sort_by=vote_count.desc&page=1`,
+            `${TMDB_BASE_URL}/movie/now_playing?language=pt-BR&sort_by=vote_count.desc&page=1`,
             {
                 headers: {
                     Authorization: `Bearer ${TMDB_TOKEN}`,

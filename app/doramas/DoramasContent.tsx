@@ -10,7 +10,7 @@ import { MediaFiltersPanel } from '@/components/MediaFiltersPanel';
 import { MediaCard } from '@/components/MediaCard';
 import { MediaPagination } from '@/components/MediaPagination';
 import { useGenres } from '@/hooks/useGenres';
-import { MediaItem, Genre } from '@/types/media';
+import { MediaItem } from '@/types/media';
 
 export default function DoramasPage() {
     const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('doramas', 'vote_count.desc');
@@ -24,9 +24,9 @@ export default function DoramasPage() {
     const [totalPages, setTotalPages] = useState(1);
 
     const sortOptions = [
-        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
+        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },/*
         { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
-        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },
+        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },*/
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
         { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];

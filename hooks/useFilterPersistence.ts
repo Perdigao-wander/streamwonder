@@ -126,6 +126,7 @@ export function useFilterPersistence(namespace: string, defaultSort: string) {
                 } catch (e) { console.error(e); }
             }
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFilters(initialFilters);
         setIsInitialized(true);
     }, [searchParams, storageKey, defaultSort, updateURL]);

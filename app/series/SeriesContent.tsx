@@ -13,7 +13,7 @@ import { MediaItem } from '@/types/media';
 
 export default function SeriesContent() {
     const { genres } = useGenres();
-    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('series', 'popularity.desc');
+    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('series', 'vote_count.desc');
     const {
         searchQuery,
         selectedGenres,
@@ -22,6 +22,14 @@ export default function SeriesContent() {
         minRating,
         currentPage,
     } = filters;
+
+    const sortOptions = [
+        { value: 'vote_count.desc', label: 'Mais Votados' },
+        { value: 'popularity.desc', label: 'Mais Populares' },
+        { value: 'vote_average.desc', label: 'Melhor Avaliados' },
+        { value: 'release_date.desc', label: 'Mais Recentes' },
+        { value: 'release_date.asc', label: 'Mais Antigos' },
+    ];
 
     const [tempSearchQuery, setTempSearchQuery] = useState(searchQuery);
     const [showFilters, setShowFilters] = useState(false);
@@ -192,7 +200,6 @@ export default function SeriesContent() {
                     </div>
 
                     <div className="mb-8 space-y-4">
-                        <div className="w-full">
                             <MediaSearchBar
                                 tempSearchQuery={tempSearchQuery}
                                 onTempQueryChange={setTempSearchQuery}
@@ -201,33 +208,6 @@ export default function SeriesContent() {
                                 onKeyPress={handleKeyPress}
                                 placeholder="Pesquise as series aqui..."
                             />
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                            <button
-                                onClick={() => setShowFilters(!showFilters)}
-                                className={`px-4 py-2 cursor-pointer rounded-xl transition-colors flex items-center gap-2 ${
-                                    showFilters || activeFiltersCount > 0
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-800/50 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                                <Filter className="w-5 h-5" />
-                                Filtros
-                                {activeFiltersCount > 0 && (
-                                    <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">
-                    {activeFiltersCount}
-                  </span>
-                                )}
-                            </button>
-                            {activeFiltersCount > 0 && !showFilters && (
-                                <button onClick={resetFilters} className="text-sm text-gray-400 hover:text-white">
-                                    Limpar filtros
-                                </button>
-                            )}
-                        </div>
-
-                        {showFilters && (
                             <MediaFiltersPanel
                                 showFilters={showFilters}
                                 onToggleFilters={() => setShowFilters(!showFilters)}
@@ -241,9 +221,10 @@ export default function SeriesContent() {
                                 selectedGenres={selectedGenres}
                                 onToggleGenre={toggleGenre}
                                 onClearFilters={resetFilters}
-                                activeFiltersCount={activeFiltersCount} sortOptions={[]} yearLabel={""}
+                                yearLabel="Ano de lançamento"
+                                activeFiltersCount={activeFiltersCount}
+                                sortOptions={sortOptions}
                             />
-                        )}
                     </div>
 
                     {searchQuery && (
