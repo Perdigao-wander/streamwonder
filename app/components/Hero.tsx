@@ -348,13 +348,13 @@ const Hero = () => {
                     {/* Setas de Navegação */}
                     <button
                         onClick={prevSlide}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10 hidden md:flex"
+                        className="absolute cursor-pointer left-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10 hidden md:flex"
                     >
                         <ChevronLeft size={24} />
                     </button>
                     <button
                         onClick={nextSlide}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10 hidden md:flex"
+                        className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-all duration-300 border border-white/10 hidden md:flex"
                     >
                         <ChevronRight size={24} />
                     </button>
