@@ -3,6 +3,16 @@ import { NextRequest, NextResponse } from 'next/server';
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
+const ADULT_KEYWORDS = [
+    '199513',  // porn
+    '155567',  // hentai
+    '155774',  // erotic
+    '157912',  // softcore
+    '242598',  // erotic movie
+    '229236',  // adult
+    '157384',  // nsfw
+].join('|');
+
 type Serie = {
     id: number;
     name: string;
@@ -18,9 +28,8 @@ type Serie = {
     origin_country: string[];
     original_language: string;
     original_name: string;
-}
+};
 
-// Opções de ordenação disponíveis
 const sortOptions = {
     'popularity.desc': 'popularity.desc',
     'popularity.asc': 'popularity.asc',
@@ -36,17 +45,10 @@ const sortOptions = {
     'name.asc': 'name.asc',
 };
 
-// LISTA DE TÍTULOS BLOQUEADOS
-const BLOCKED_TITLES = [
-    'Tayuan',
-    'Rita',
-    'Hot Girls'
-];
+const BLOCKED_TITLES = ['Tayuan', 'Rita', 'Hot Girls'];
 
-// Função para verificar se o título contém conteúdo adulto
 function isAdultContent(title: string): boolean {
     const normalizedTitle = title.toLowerCase().trim();
-
     const adultIndicators = [
         'ninfomaniaca', 'ninfomaníaca', 'nymphomaniac', 'Hot Girls',
         '50 tons', 'fifty shades',
@@ -57,43 +59,22 @@ function isAdultContent(title: string): boolean {
         'centopeia', 'serbian',
         'porn', 'erotic', 'adult',
         'sexy', 'sensual', 'xxx',
-        'hentai', 'ecchi', 'yaoi', 'yuri'
+        'hentai', 'ecchi', 'yaoi', 'yuri',
     ];
+    return adultIndicators.some(indicator => normalizedTitle.includes(indicator));
+}
 
-    return adultIndicators.some(indicator =>
-        normalizedTitle.includes(indicator)
+function isTitleBlocked(title: string): boolean {
+    const normalizedTitle = title.toLowerCase().trim();
+    return BLOCKED_TITLES.some(blockedTitle =>
+        normalizedTitle.includes(blockedTitle.toLowerCase().trim())
     );
 }
 
-// Função para verificar se o título está na lista de bloqueio
-function isTitleBlocked(title: string): boolean {
-    const normalizedTitle = title.toLowerCase().trim();
-
-    return BLOCKED_TITLES.some(blockedTitle => {
-        const normalizedBlocked = blockedTitle.toLowerCase().trim();
-        return normalizedTitle.includes(normalizedBlocked);
-    });
-}
-
-// Função para verificar se a série tem votação zerada
 function hasZeroVotes(serie: Serie): boolean {
     return serie.vote_average === 0 && serie.vote_count === 0;
 }
 
-// Função para filtrar por texto (busca por nome)
-function filterByText(shows: Serie[], searchText: string): Serie[] {
-    if (!searchText) return shows;
-
-    const normalizedSearch = searchText.toLowerCase().trim();
-
-    return shows.filter(show => {
-        const title = show.name?.toLowerCase() || '';
-        const originalTitle = show.original_name?.toLowerCase() || '';
-        return title.includes(normalizedSearch) || originalTitle.includes(normalizedSearch);
-    });
-}
-
-// Função principal de filtragem de séries
 function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[] {
     let excludedCountriesList: string[] | null = null;
 
@@ -102,19 +83,11 @@ function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[
     }
 
     return shows.filter(show => {
-        // Filtra séries sem votação
         if (hasZeroVotes(show)) return false;
-
-        // Filtra séries adultas (flag da API)
         if (show.adult) return false;
-
-        // Filtra por conteúdo adulto no título
         if (isAdultContent(show.name)) return false;
-
-        // Filtra títulos específicos da lista bloqueada
         if (isTitleBlocked(show.name)) return false;
 
-        // Filtra por país de origem excluído (se especificado)
         if (excludedCountriesList && excludedCountriesList.length > 0) {
             if (show.origin_country && show.origin_country.length > 0) {
                 const hasExcludedCountry = show.origin_country.some(country =>
@@ -128,7 +101,6 @@ function filterTVShows(shows: Serie[], excludeCountries?: string | null): Serie[
     });
 }
 
-// Função para calcular o total de resultados considerando a filtragem
 function calculateFilteredTotal(
     originalTotal: number,
     filteredCount: number,
@@ -159,19 +131,15 @@ export async function GET(request: NextRequest) {
     const withoutGenres = searchParams.get('without_genres') || '';
     const withRuntimeGte = searchParams.get('with_runtime.gte') || '';
     const withRuntimeLte = searchParams.get('with_runtime.lte') || '';
-
-    // Parâmetro para busca por texto
     const withTextQuery = searchParams.get('with_text_query') || '';
-
     const excludeCountries = searchParams.get('exclude_countries');
 
     try {
-        // Se houver busca por texto, usar o endpoint de search em vez de discover
         let url;
         let data;
 
         if (withTextQuery) {
-            // Usar endpoint de search para busca por texto
+            // 🔍 Busca por texto: /search/tv (não suporta without_keywords)
             url = `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(withTextQuery)}&language=pt-BR&page=${page}&include_adult=false&sort_by=${sortBy}`;
 
             const response = await fetch(url, {
@@ -187,8 +155,11 @@ export async function GET(request: NextRequest) {
 
             data = await response.json();
         } else {
-            // Usar endpoint de discover para filtros normais
+            // 🎬 Discover: aplica without_keywords NA PRÓPRIA TMDB
             url = `${TMDB_BASE_URL}/discover/tv?include_adult=false&include_null_first_air_dates=false&language=pt-BR&page=${page}&sort_by=${sortBy}`;
+
+            // 🎯 CORREÇÃO DEFINITIVA: exclui keywords adultas antes da paginação
+            url += `&without_keywords=${ADULT_KEYWORDS}`;
 
             if (withGenres) url += `&with_genres=${withGenres}`;
             if (firstAirDateYear) url += `&first_air_date_year=${firstAirDateYear}`;
@@ -221,12 +192,7 @@ export async function GET(request: NextRequest) {
             vote_count: typeof serie.vote_count === 'string' ? parseInt(serie.vote_count) : serie.vote_count,
         }));
 
-        let filteredByContent = filterTVShows(seriesWithCorrectTypes, excludeCountries);
-
-        // Se veio do discover mas tem texto de busca, aplicar filtro de texto adicional
-        if (!withTextQuery && withTextQuery) {
-            filteredByContent = filterByText(filteredByContent, withTextQuery);
-        }
+        const filteredByContent = filterTVShows(seriesWithCorrectTypes, excludeCountries);
 
         // Calcular totais atualizados baseados na filtragem
         const { filteredTotalResults, filteredTotalPages } = calculateFilteredTotal(
@@ -254,7 +220,6 @@ export async function GET(request: NextRequest) {
             original_name: serie.original_name,
         }));
 
-        // Retornar resposta com totais atualizados
         return NextResponse.json({
             page: parseInt(page),
             total_pages: filteredTotalPages,

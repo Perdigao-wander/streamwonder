@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation'; // Importe usePathname
-import { Menu, X, PlayCircle, BookOpen, Film, Tv, Home, Drama, JapaneseYen, Satellite } from 'lucide-react';
+import { Menu, X, PlayCircle, Bookmark , Film, Tv, Home, Drama, JapaneseYen, Satellite } from 'lucide-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +38,7 @@ const Navbar = () => {
         { href: '/doramas', label: 'Doramas', icon: Drama },
         { href: '/animes', label: 'Animes', icon: JapaneseYen },
         { href: '/canais', label: 'Canais', icon: Satellite },
+        { href: '/minha-lista', label: 'Minha Lista', icon: Bookmark },
         //{ href: '/hqs', label: 'HQs', icon: BookOpen },
     ];
 

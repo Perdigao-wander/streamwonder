@@ -24,16 +24,18 @@ export default function AnimesPage() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Controla se o gênero padrão já foi aplicado (evita loop)
     const hasSetDefaultGenre = useRef(false);
+    const currentYear = new Date().getFullYear();
 
     const sortOptions = [
         { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
+        { value: 'popularity.desc', label: '🔥 Mais Populares' },
+        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
+        { value: 'vote_average.desc', label: '⭐ Melhor Avaliados' },
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
         { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
 
-    // Busca os animes
     const fetchAnimes = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) setLoadingMore(true);
         else setLoading(true);
@@ -42,14 +44,24 @@ export default function AnimesPage() {
             const queryParams = new URLSearchParams();
             queryParams.append('page', page.toString());
             queryParams.append('sort_by', filters.sortBy);
-            queryParams.append('with_origin_country', 'JP');
 
+            // 🌏 Coreia, China e Japão
+            queryParams.append('with_origin_country', 'KR|CN|JP');
+
+            // 🎨 Gênero Animação (16) — sempre presente
             if (filters.selectedGenres.length) {
                 queryParams.append('with_genres', filters.selectedGenres.join(','));
+            } else {
+                queryParams.append('with_genres', String(ANIMATION_GENRE_ID));
             }
+
+            // 🗓️ Ano atual por padrão, ou o que o usuário escolher
             if (filters.selectedYear) {
                 queryParams.append('first_air_date_year', filters.selectedYear);
+            } else {
+                queryParams.append('first_air_date_year', String(currentYear));
             }
+
             if (filters.minRating) {
                 queryParams.append('vote_average.gte', filters.minRating);
             }
@@ -57,6 +69,8 @@ export default function AnimesPage() {
             let url = '';
             const isSearching = !!filters.searchQuery;
             if (isSearching) {
+                queryParams.delete("first_air_date_year")
+                queryParams.append('first_air_date_year', filters.selectedYear);
                 url = '/api/tv/search';
                 queryParams.append('query', filters.searchQuery);
             } else {
@@ -80,26 +94,22 @@ export default function AnimesPage() {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [filters]);
+    }, [filters, currentYear]);
 
-    // Sincroniza o campo de busca temporário com o filtro atual
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTempSearchQuery(filters.searchQuery);
     }, [filters.searchQuery]);
 
-    // Inicialização: aplica o gênero "Animação" se nenhum outro estiver selecionado
     useEffect(() => {
         if (isInitialized && !hasSetDefaultGenre.current) {
             if (filters.selectedGenres.length === 0) {
-                // Aplica o gênero 16 (Animação) como padrão
                 updateFilter({ selectedGenres: [ANIMATION_GENRE_ID] });
             }
             hasSetDefaultGenre.current = true;
         }
     }, [isInitialized, filters.selectedGenres, updateFilter]);
 
-    // Busca os animes sempre que os filtros mudarem
     useEffect(() => {
         if (isInitialized) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -155,7 +165,6 @@ export default function AnimesPage() {
         }
     };
 
-    // Reseta os filtros mantendo o gênero "Animação" ativo
     const handleResetFilters = () => {
         updateFilter({
             searchQuery: '',
@@ -171,9 +180,21 @@ export default function AnimesPage() {
         window.location.href = `/tv/${anime.id}`;
     };
 
-    const activeFiltersCount = filters.selectedGenres.length + (filters.selectedYear ? 1 : 0) + (filters.minRating ? 1 : 0);
+    // 🌍 Badge dinâmico por país de origem
+    const getBadge = (anime: MediaItem) => {
+        const country = anime.origin_country?.[0];
+        const flag =
+            country === 'JP' ? '🇯🇵' :
+                country === 'KR' ? '🇰🇷' :
+                    country === 'CN' ? '🇨🇳' : '🌏';
+        return <span className="text-xs">{flag}</span>;
+    };
+
+    const activeFiltersCount =
+        filters.selectedGenres.length +
+        (filters.selectedYear ? 1 : 0) +
+        (filters.minRating ? 1 : 0);
     const isSearching = !!filters.searchQuery;
-    const japanBadge = <span className="text-orange-400 text-xs">🇯🇵</span>;
 
     if (!isInitialized || (loading && animes.length === 0)) {
         return (
@@ -211,6 +232,9 @@ export default function AnimesPage() {
                             Animes
                             <JapaneseYen className="text-3xl md:text-4xl text-indigo-500" />
                         </h1>
+{/*                        <p className="text-sm text-gray-400">
+                            🇯🇵 Japão · 🇰🇷 Coreia · 🇨🇳 China — lançamentos de {currentYear}
+                        </p>*/}
                     </div>
 
                     <div className="mb-8 space-y-4">
@@ -235,7 +259,7 @@ export default function AnimesPage() {
                             genres={genres}
                             selectedGenres={filters.selectedGenres}
                             onToggleGenre={toggleGenre}
-                            onClearFilters={handleResetFilters}  // ← usa o reset com animação
+                            onClearFilters={handleResetFilters}
                             activeFiltersCount={activeFiltersCount}
                             yearLabel="Ano de estreia"
                         />
@@ -253,7 +277,13 @@ export default function AnimesPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                         {animes.map(anime => (
-                            <MediaCard key={anime.id} item={anime} onShowInfo={handleShowInfo} badge={japanBadge} />
+                            <MediaCard
+                                key={anime.id}
+                                item={anime}
+                                category="animes"
+                                onShowInfo={handleShowInfo}
+                                badge={getBadge(anime)}
+                            />
                         ))}
                     </div>
 
@@ -284,7 +314,7 @@ export default function AnimesPage() {
                             <div className="text-gray-400 mb-4">
                                 {isSearching
                                     ? `Nenhum anime encontrado para "${filters.searchQuery}".`
-                                    : 'Nenhum anime encontrado com os filtros selecionados.'}
+                                    : `Nenhum anime de ${currentYear} encontrado com os filtros selecionados.`}
                             </div>
                             <button onClick={handleResetFilters} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                                 Limpar Filtros

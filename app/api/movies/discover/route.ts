@@ -3,6 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
 const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
+const ITEMS_PER_PAGE = 20;
+const MAX_EXTRA_PAGES = 3; // reduzido: com without_keywords o fill quase nunca precisa
+
+// 🎯 Keywords de conteúdo adulto na TMDB — excluídas ANTES da paginação
+// Fonte: https://www.themoviedb.org/keyword/155477-sex  (e correlatas)
+const ADULT_KEYWORDS = [
+    '155477',  // sex
+    '155774',  // erotic
+    '10595',   // nudity
+    '229236',  // adult
+    '157384',  // nsfw
+    '171997',  // sexual
+    '192771',  // sex scene
+    '199513',  // porn
+    '155567',  // hentai
+    '157912',  // softcore
+    '195069',  // sex comedy
+    '242598',  // erotic movie
+].join('|');
+
 type Movie = {
     id: number;
     title: string;
@@ -16,17 +36,12 @@ type Movie = {
     genre_ids: number[];
     vote_average: number;
     imdb_id: string | null;
-}
+};
 
-const BLOCKED_TITLES = [
-    'Tayuan',
-    'Rita',
-    'Hot Girls'
-];
+const BLOCKED_TITLES = ['Tayuan', 'Rita', 'Hot Girls'];
 
 function isAdultContent(title: string): boolean {
     const normalizedTitle = title.toLowerCase().trim();
-
     const adultIndicators = [
         'ninfomaniaca','ninfomaníaca', 'nymphomaniac','Hot Girls',
         '50 tons', 'fifty shades',
@@ -38,20 +53,14 @@ function isAdultContent(title: string): boolean {
         'porn', 'erotic', 'adult',
         'sexy', 'sensual', 'xxx'
     ];
-
-    return adultIndicators.some(indicator =>
-        normalizedTitle.includes(indicator)
-    );
+    return adultIndicators.some(indicator => normalizedTitle.includes(indicator));
 }
 
 function isTitleBlocked(title: string): boolean {
     const normalizedTitle = title.toLowerCase().trim();
-
-    return BLOCKED_TITLES.some(blockedTitle => {
-        const normalizedBlocked = blockedTitle.toLowerCase().trim();
-        // Bloqueio parcial (se o título CONTER alguma palavra proibida)
-        return normalizedTitle.includes(normalizedBlocked);
-    });
+    return BLOCKED_TITLES.some(blockedTitle =>
+        normalizedTitle.includes(blockedTitle.toLowerCase().trim())
+    );
 }
 
 function hasZeroVotes(movie: Movie): boolean {
@@ -59,75 +68,26 @@ function hasZeroVotes(movie: Movie): boolean {
 }
 
 function filterMovies(movies: Movie[]): Movie[] {
-    let adultFlagCount = 0;
-    let adultContentCount = 0;
-    let blockedTitleCount = 0;
-    let zeroVotesCount = 0;
-
-    const filtered = movies.filter(movie => {
-        // 1. Filtra filmes sem votação (vote_average = 0 e vote_count = 0)
-        if (hasZeroVotes(movie)) {
-            zeroVotesCount++;
-            return false;
-        }
-
-        // 2. Filtra filmes adultos (flag da API)
-        if (movie.adult) {
-            adultFlagCount++;
-            return false;
-        }
-
-        // 3. Filtra por conteúdo adulto no título
-        if (isAdultContent(movie.title)) {
-            adultContentCount++;
-            return false;
-        }
-
-        // 4. Filtra títulos específicos da lista bloqueada
-        if (isTitleBlocked(movie.title)) {
-            blockedTitleCount++;
-            return false;
-        }
-
+    return movies.filter(movie => {
+        if (hasZeroVotes(movie)) return false;
+        if (movie.adult) return false;
+        if (isAdultContent(movie.title)) return false;
+        if (isTitleBlocked(movie.title)) return false;
         return true;
     });
-
-    return filtered;
-}
-
-async function calculateFilteredTotal(
-    originalTotal: number,
-    filteredCount: number,
-    originalResults: Movie[]
-): Promise<{ filteredTotalResults: number; filteredTotalPages: number }> {
-    // Calcula a proporção de filmes que passaram pelo filtro
-    const filterRatio = originalResults.length > 0
-        ? filteredCount / originalResults.length
-        : 1;
-
-    // Aplica a mesma proporção ao total de resultados
-    const filteredTotalResults = Math.floor(originalTotal * filterRatio);
-
-    // Calcula o novo total de páginas (assumindo 20 filmes por página, padrão da API)
-    const ITEMS_PER_PAGE = 20;
-    const filteredTotalPages = Math.ceil(filteredTotalResults / ITEMS_PER_PAGE);
-
-    return { filteredTotalResults, filteredTotalPages };
 }
 
 // Cache para IMDb IDs
 const imdbCache = new Map<number, string | null>();
 const cacheTimestamps = new Map<number, number>();
-const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias
+const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000;
 
 async function fetchImdbId(movieId: number): Promise<string | null> {
-    // Verifica cache
     if (imdbCache.has(movieId)) {
         const timestamp = cacheTimestamps.get(movieId);
         if (timestamp && (Date.now() - timestamp) < CACHE_DURATION) {
             return imdbCache.get(movieId) ?? null;
         } else {
-            // Cache expirado, remove
             imdbCache.delete(movieId);
             cacheTimestamps.delete(movieId);
         }
@@ -144,46 +104,27 @@ async function fetchImdbId(movieId: number): Promise<string | null> {
             }
         );
 
-        if (!response.ok) {
-            console.error(`Erro ao buscar IMDb ID para filme ${movieId}: ${response.status}`);
-            return null;
-        }
+        if (!response.ok) return null;
 
         const data = await response.json();
         const imdbId = data.imdb_id || null;
 
-        // Armazena em cache
         imdbCache.set(movieId, imdbId);
         cacheTimestamps.set(movieId, Date.now());
 
         return imdbId;
-    } catch (error) {
-        console.error(`Erro ao buscar IMDb ID para filme ${movieId}:`, error);
+    } catch {
         return null;
     }
 }
 
-// Endpoint principal
-export async function GET(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams;
-
-    const page = searchParams.get('page') || '1';
-    const sortBy = searchParams.get('sort_by') || 'vote_count.desc';
-    const withGenres = searchParams.get('with_genres') || '';
-    const primaryReleaseYear = searchParams.get('primary_release_year') || '';
-    const voteAverageGte = searchParams.get('vote_average.gte') || '';
-    const withKeywords = searchParams.get('with_keywords') || '';
-
+// Busca UMA página da TMDB e filtra (com fallback de segurança)
+async function fetchAndFilterPage(
+    baseUrl: string,
+    page: number
+): Promise<{ movies: Movie[]; totalPages: number; totalResults: number } | null> {
     try {
-        // 1. Construir URL da API
-        let url = `${TMDB_BASE_URL}/discover/movie?include_adult=false&language=pt-BR&page=${page}&sort_by=${sortBy}`;
-
-        if (withGenres) url += `&with_genres=${withGenres}`;
-        if (primaryReleaseYear) url += `&primary_release_year=${primaryReleaseYear}`;
-        if (voteAverageGte) url += `&vote_average.gte=${voteAverageGte}`;
-        if (withKeywords) url += `&with_keywords=${withKeywords}`;
-
-        // 2. Buscar filmes da API
+        const url = `${baseUrl}&page=${page}`;
         const response = await fetch(url, {
             headers: {
                 Authorization: `Bearer ${TMDB_TOKEN}`,
@@ -191,27 +132,99 @@ export async function GET(request: NextRequest) {
             },
         });
 
-        if (!response.ok) {
-            throw new Error(`Erro na API: ${response.status}`);
-        }
+        if (!response.ok) return null;
 
         const data = await response.json();
+        return {
+            movies: filterMovies(data.results),
+            totalPages: data.total_pages,
+            totalResults: data.total_results,
+        };
+    } catch {
+        return null;
+    }
+}
 
-        // 3. Aplicar filtros (sem votação + adulto + conteúdo adulto + títulos bloqueados)
-        const filteredMovies = filterMovies(data.results);
+// Preenche a página lógica com até ITEMS_PER_PAGE filmes filtrados
+async function fetchPageWithFill(
+    baseUrl: string,
+    startPage: number
+): Promise<{
+    movies: Movie[];
+    reachedEnd: boolean;
+    lastTmdbPageFetched: number;
+    originalTotalPages: number;
+    originalTotalResults: number;
+}> {
+    const collected: Movie[] = [];
+    let currentPage = startPage;
+    let extras = 0;
+    let reachedEnd = false;
+    let originalTotalPages = 1;
+    let originalTotalResults = 0;
 
-        // 4. Calcular totais atualizados baseados na filtragem
-        const { filteredTotalResults, filteredTotalPages } = await calculateFilteredTotal(
-            data.total_results,
-            filteredMovies.length,
-            data.results
-        );
+    while (collected.length < ITEMS_PER_PAGE && extras <= MAX_EXTRA_PAGES) {
+        const result = await fetchAndFilterPage(baseUrl, currentPage);
+        if (!result) break;
 
-           // 5. Buscar IMDb IDs para todos os filmes filtrados
+        originalTotalPages = result.totalPages;
+        originalTotalResults = result.totalResults;
+
+        collected.push(...result.movies);
+
+        if (currentPage >= result.totalPages) {
+            reachedEnd = true;
+            break;
+        }
+
+        currentPage++;
+        extras++;
+    }
+
+    return {
+        movies: collected.slice(0, ITEMS_PER_PAGE),
+        reachedEnd,
+        lastTmdbPageFetched: currentPage,
+        originalTotalPages,
+        originalTotalResults,
+    };
+}
+
+export async function GET(request: NextRequest) {
+    const searchParams = request.nextUrl.searchParams;
+
+    const page = parseInt(searchParams.get('page') || '1');
+    const sortBy = searchParams.get('sort_by') || 'vote_count.desc';
+    const withGenres = searchParams.get('with_genres') || '';
+    const primaryReleaseYear = searchParams.get('primary_release_year') || '';
+    const voteAverageGte = searchParams.get('vote_average.gte') || '';
+    const withKeywords = searchParams.get('with_keywords') || '';
+
+    try {
+        // 1. Construir URL base (sem page — controlado pelo fill)
+        let baseUrl = `${TMDB_BASE_URL}/discover/movie?include_adult=false&language=pt-BR&sort_by=${sortBy}`;
+
+        // 🎯 CORREÇÃO DEFINITIVA: exclui keywords adultas NA PRÓPRIA TMDB
+        //    Isso faz a filtragem local quase não remover nada → sem buracos → sem overlap
+        baseUrl += `&without_keywords=${ADULT_KEYWORDS}`;
+
+        if (withGenres) baseUrl += `&with_genres=${withGenres}`;
+        if (primaryReleaseYear) baseUrl += `&primary_release_year=${primaryReleaseYear}`;
+        if (voteAverageGte) baseUrl += `&vote_average.gte=${voteAverageGte}`;
+        if (withKeywords) baseUrl += `&with_keywords=${withKeywords}`;
+
+        // 2. Buscar com fill (raramente vai precisar de página extra agora)
+        const {
+            movies,
+            reachedEnd,
+            lastTmdbPageFetched,
+            originalTotalPages,
+        } = await fetchPageWithFill(baseUrl, page);
+
+        // 3. Buscar IMDb IDs em paralelo (com cache)
         const moviesWithImdb = await Promise.all(
-            filteredMovies.map(async (movie: Movie) => {
+            movies.map(async (movie) => {
                 const imdbId = await fetchImdbId(movie.id);
-
                 return {
                     id: movie.id,
                     title: movie.title,
@@ -229,11 +242,18 @@ export async function GET(request: NextRequest) {
             })
         );
 
-        // 6. Retornar resposta com os totais atualizados
+        // 4. Estima total_pages considerando o fill
+        const pagesConsumedRatio = lastTmdbPageFetched / page;
+        const estimatedTotalPages = Math.max(
+            1,
+            Math.ceil(originalTotalPages / Math.max(1, pagesConsumedRatio)) - 1
+        );
+
         return NextResponse.json({
-            page: parseInt(page),
-            total_pages: filteredTotalPages,
-            total_results: filteredTotalResults,
+            page,
+            total_pages: reachedEnd ? page : estimatedTotalPages,
+            total_results: estimatedTotalPages * ITEMS_PER_PAGE,
+            has_more: !reachedEnd && movies.length === ITEMS_PER_PAGE,
             results: moviesWithImdb,
         });
 

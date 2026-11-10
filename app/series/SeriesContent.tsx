@@ -23,6 +23,9 @@ export default function SeriesContent() {
         currentPage,
     } = filters;
 
+    const currentYear = new Date().getFullYear();
+    const [hasInitializedYear, setHasInitializedYear] = useState(false);
+
     const sortOptions = [
         { value: 'vote_count.desc', label: 'Mais Votados' },
         { value: 'popularity.desc', label: 'Mais Populares' },
@@ -44,6 +47,15 @@ export default function SeriesContent() {
         setTempSearchQuery(searchQuery);
     }, [searchQuery]);
 
+    // ⬇️ NOVO: aplica o ano atual como filtro padrão na primeira carga
+    useEffect(() => {
+        if (isInitialized && !hasInitializedYear && !selectedYear) {
+            updateFilter({ selectedYear: String(currentYear), currentPage: 1 });
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setHasInitializedYear(true);
+        }
+    }, [isInitialized, hasInitializedYear, selectedYear, currentYear, updateFilter]);
+
     // Buscar séries sempre que os filtros mudarem
     const fetchSeries = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) {
@@ -57,7 +69,12 @@ export default function SeriesContent() {
             const queryParams = new URLSearchParams();
             queryParams.append('page', page.toString());
             queryParams.append('sort_by', sortBy);
-            queryParams.append('exclude_countries', 'JP,KR');
+            queryParams.append(
+                'with_origin_country',
+                'US|GB|CA|AU|FR|DE|ES|IT|BR|MX|AR|NL|SE|NO|DK|IE|NZ|AT|BE|CH|FI|IS|LU|PT|PL|CZ|HU|RO|GR|HR|RS|BG|CL|CO|PE|UY|VE|EC|BO|PY|CR|PA|DO|GT|HN|SV|NI|ZA|IL|TR|IN|TH|PH|ID|MY|SG|TW|AE|SA'
+            );
+            // queryParams.append('exclude_countries', 'JP,KR,CN,ID');
+           // queryParams.append('without_genres', '16'); // exclui animação (anime + animação ocidental)
 
             if (selectedGenres.length > 0) {
                 queryParams.append('with_genres', selectedGenres.join(','));
@@ -239,7 +256,7 @@ export default function SeriesContent() {
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
                         {series.map((show) => (
-                            <MediaCard key={show.id} item={show} onShowInfo={handleShowInfo} />
+                            <MediaCard category="series" key={show.id} item={show} onShowInfo={handleShowInfo} />
                         ))}
                     </div>
 

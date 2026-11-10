@@ -1,4 +1,3 @@
-// hooks/useSeriesFetch.ts
 import { useState, useCallback } from 'react';
 import { MediaItem } from '@/types/media';
 

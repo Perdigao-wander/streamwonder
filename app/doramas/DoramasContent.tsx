@@ -15,6 +15,11 @@ import { MediaItem } from '@/types/media';
 export default function DoramasPage() {
     const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('doramas', 'vote_count.desc');
     const { genres } = useGenres();
+    const genresSemAnimacao = genres.filter((g) => g.id !== 16);
+
+    // 🗓️ Ano atual + flag para aplicar o filtro apenas uma vez
+    const currentYear = new Date().getFullYear();
+    const [hasInitializedYear, setHasInitializedYear] = useState(false);
 
     const [tempSearchQuery, setTempSearchQuery] = useState(filters.searchQuery);
     const [showFilters, setShowFilters] = useState(false);
@@ -24,9 +29,7 @@ export default function DoramasPage() {
     const [totalPages, setTotalPages] = useState(1);
 
     const sortOptions = [
-        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },/*
-        { value: 'first_air_date.desc', label: '🆕 Mais Recentes' },
-        { value: 'first_air_date.asc', label: '📅 Mais Antigos' },*/
+        { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
         { value: 'name.desc', label: '🔤 Nome (Z-A)' },
         { value: 'name.asc', label: '🔤 Nome (A-Z)' },
     ];
@@ -39,7 +42,10 @@ export default function DoramasPage() {
             const queryParams = new URLSearchParams();
             queryParams.append('page', page.toString());
             queryParams.append('sort_by', filters.sortBy);
-            queryParams.append('with_origin_country', 'KR'); // apenas doramas (Coreia do Sul)
+
+            // 🌏 Doramas: Coreia do Sul, China e Japão (filtro aplicado NA TMDB)
+            queryParams.append('with_origin_country', 'KR|CN|JP|TH|TW|PH|TR');
+            queryParams.append('without_genres', '16'); // remove animação
 
             if (filters.selectedGenres.length) {
                 queryParams.append('with_genres', filters.selectedGenres.join(','));
@@ -79,17 +85,30 @@ export default function DoramasPage() {
         }
     }, [filters]);
 
+    // 🗓️ Aplica o ano atual como filtro padrão na primeira carga
+    useEffect(() => {
+        if (isInitialized && !hasInitializedYear) {
+            if (!filters.selectedYear) {
+                updateFilter({ selectedYear: String(currentYear), currentPage: 1 });
+            }
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setHasInitializedYear(true);
+        }
+    }, [isInitialized, hasInitializedYear, filters.selectedYear, currentYear, updateFilter]);
+
     // Sincroniza tempSearchQuery com o filtro atual
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTempSearchQuery(filters.searchQuery);
     }, [filters.searchQuery]);
 
-    // Busca quando os filtros ou página mudam
+    // Busca quando os filtros ou página mudam (só depois de inicializar o ano)
     useEffect(() => {
-        if (isInitialized) {
+        if (isInitialized && hasInitializedYear) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchDoramas(filters.currentPage, false);
         }
-    }, [filters, isInitialized, fetchDoramas]);
+    }, [filters, isInitialized, hasInitializedYear, fetchDoramas]);
 
     // Handlers
     const performSearch = () => {
@@ -146,10 +165,7 @@ export default function DoramasPage() {
     const activeFiltersCount = filters.selectedGenres.length + (filters.selectedYear ? 1 : 0) + (filters.minRating ? 1 : 0);
     const isSearching = !!filters.searchQuery;
 
-    // Badge com bandeira da Coreia
-    const koreaBadge = <span className="text-indigo-400 text-xs">🇰🇷</span>;
-
-    if (!isInitialized || (loading && doramas.length === 0)) {
+    if (!isInitialized || !hasInitializedYear || (loading && doramas.length === 0)) {
         return (
             <>
                 <Navbar />
@@ -206,7 +222,7 @@ export default function DoramasPage() {
                             onYearChange={handleYearChange}
                             minRating={filters.minRating}
                             onRatingChange={handleRatingChange}
-                            genres={genres}
+                            genres={genresSemAnimacao}
                             selectedGenres={filters.selectedGenres}
                             onToggleGenre={toggleGenre}
                             onClearFilters={resetFilters}
@@ -226,14 +242,22 @@ export default function DoramasPage() {
                     )}
 
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                        {doramas.map(dorama => (
-                            <MediaCard
-                                key={dorama.id}
-                                item={dorama}
-                                onShowInfo={handleShowInfo}
-                                badge={koreaBadge}
-                            />
-                        ))}
+                        {doramas.map(dorama => {
+                            const country = dorama.origin_country?.[0];
+                            const flag =
+                                country === 'KR' ? '🇰🇷' :
+                                    country === 'CN' ? '🇨🇳' :
+                                        country === 'JP' ? '🇯🇵' : '🌏';
+                            return (
+                                <MediaCard
+                                    key={dorama.id}
+                                    item={dorama}
+                                    category="doramas"
+                                    onShowInfo={handleShowInfo}
+                                    badge={<span className="text-indigo-400 text-xs">{flag}</span>}
+                                />
+                            );
+                        })}
                     </div>
 
                     {loadingMore && (

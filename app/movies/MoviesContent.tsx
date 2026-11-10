@@ -32,6 +32,8 @@ export default function MoviesPage() {
         { value: 'vote_count.desc', label: 'Mais Votados' },
     ];
 
+
+
     const fetchMovies = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) setLoadingMore(true);
         else setLoading(true);

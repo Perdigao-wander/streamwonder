@@ -13,6 +13,7 @@ export interface MediaItem {
     imdb_id?: string;
     release_date?: string;
     first_air_date?: string;
+    media_type?: string;
     vote_average?: number;
     vote_count?: number;
     popularity?: number;

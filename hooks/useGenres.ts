@@ -1,4 +1,3 @@
-// hooks/useGenres.ts
 import { useState, useEffect } from 'react';
 import { Genre } from '@/types/media';
 

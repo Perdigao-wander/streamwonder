@@ -3,7 +3,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Play, Star, Tv, AlertCircle } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
-import {useRouter} from "next/navigation";
+import { WatchlistButton } from '@/components/WatchlistButton';
+import { useRouter } from 'next/navigation';
+import { MediaCategory } from '@/types/watchlist';
 
 interface TVShow {
     id: number;
@@ -36,11 +38,19 @@ interface TVShowWithDetails extends TVShow {
 interface TVShowsGridProps {
     category?: 'popular' | 'top_rated' | 'airing_today' | 'on_the_air';
     limit?: number;
-    originCountry?: string; // Para filtrar por país (ex: 'KR' para doramas, 'JP' para animes)
-    mediaType?: 'tv' | 'anime'; // Para distinguir entre séries normais e animes
+    originCountry?: string;
+    mediaType?: 'tv' | 'anime';
+    year?: number | string;
+    mediaCategory?: MediaCategory;   // 🆕 'series' | 'doramas' | 'animes'
 }
 
-const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShowsGridProps) => {
+const TVShowsGrid = ({
+                         category = 'popular',
+                         limit = 10,
+                         originCountry,
+                         year,
+                         mediaCategory
+                     }: TVShowsGridProps) => {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -59,41 +69,47 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                 setLoading(true);
                 setError(null);
 
+                const useDiscover = !!(originCountry || year);
                 let endpoint = '';
 
-                // Se for anime (Japão) ou dorama (Coreia), usa discover com filtro
-                if (originCountry) {
-                    endpoint = `/api/tv/discover?with_origin_country=${originCountry}&sort_by=vote_count.desc&limit=${limit}`;
+                if (useDiscover) {
+                    const params = new URLSearchParams();
+
+                    if (originCountry) {
+                        params.set('with_origin_country', originCountry);
+                    }
+
+                    // 🎯 FILTRO DE ANIME: se for Japão, restringe a Animação e exclui Reality
+                    if (originCountry === 'JP') {
+                        params.set('with_genres', '16');       // 16 = Animation
+                        params.set('without_genres', '10764'); // 10764 = Reality
+                    }
+
+                    if (year) {
+                        params.set('first_air_date_year', String(year));
+                    }
+
+                    params.set('sort_by', 'vote_count.desc');
+                    params.set('limit', String(limit));
+
+                    endpoint = `/api/tv/discover?${params.toString()}`;
                 } else {
-                    // Caso contrário, usa os endpoints normais
                     switch (category) {
-                        case 'popular':
-                            endpoint = '/api/tv/popular';
-                            break;
-                        case 'top_rated':
-                            endpoint = '/api/tv/top-rated';
-                            break;
-                        case 'airing_today':
-                            endpoint = '/api/tv/airing-today';
-                            break;
-                        case 'on_the_air':
-                            endpoint = '/api/tv/on-the-air';
-                            break;
-                        default:
-                            endpoint = '/api/tv/popular';
+                        case 'popular':      endpoint = '/api/tv/popular'; break;
+                        case 'top_rated':    endpoint = '/api/tv/top-rated'; break;
+                        case 'airing_today': endpoint = '/api/tv/airing-today'; break;
+                        case 'on_the_air':   endpoint = '/api/tv/on-the-air'; break;
+                        default:             endpoint = '/api/tv/popular';
                     }
                 }
 
                 const response = await fetch(endpoint);
-
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const data = await response.json();
-
-                // A API de discover retorna os resultados dentro de 'results'
-                const results = originCountry ? data.results : data;
+                const results = useDiscover ? data.results : data;
                 setShows(results.slice(0, limit));
             } catch (error) {
                 setError(error instanceof Error ? error.message : 'Erro ao buscar conteúdo');
@@ -104,38 +120,39 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
         };
 
         fetchTVShows();
-    }, [category, limit, originCountry]);
+    }, [category, limit, originCountry, year]);
 
-    const handleShowInfo = useCallback(async (show: TVShow, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
+    const handleShowInfo = useCallback(
+        async (show: TVShow, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const mediaType = show.media_type || (show.first_air_date ? 'tv' : 'movie');
+            router.push(`/${mediaType}/${show.id}`);
+        },
+        [router]
+    );
 
-        const mediaType = show.media_type || (show.first_air_date ? 'tv' : 'movie');
-
-        router.push(`/${mediaType}/${show.id}`);
-    }, [router]);
-
-    const handleTouchStart = useCallback((e: React.TouchEvent, show: TVShow) => {
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
         const touch = e.touches[0];
         setTouchStart({ x: touch.clientX, y: touch.clientY });
     }, []);
 
-    const handleTouchEnd = useCallback((e: React.TouchEvent, show: TVShow) => {
-        if (!touchStart) return;
-
-        const touchEnd = e.changedTouches[0];
-        const deltaX = Math.abs(touchEnd.clientX - touchStart.x);
-        const deltaY = Math.abs(touchEnd.clientY - touchStart.y);
-
-        if (deltaX < 10 && deltaY < 10) {
-            e.preventDefault();
-            handleShowInfo(show, e);
-        }
-
-        setTouchStart(null);
-    }, [touchStart, handleShowInfo]);
+    const handleTouchEnd = useCallback(
+        (e: React.TouchEvent, show: TVShow) => {
+            if (!touchStart) return;
+            const touchEnd = e.changedTouches[0];
+            const deltaX = Math.abs(touchEnd.clientX - touchStart.x);
+            const deltaY = Math.abs(touchEnd.clientY - touchStart.y);
+            if (deltaX < 10 && deltaY < 10) {
+                e.preventDefault();
+                handleShowInfo(show, e);
+            }
+            setTouchStart(null);
+        },
+        [touchStart, handleShowInfo]
+    );
 
     const handleClosePlayer = useCallback(() => {
         setShowPlayer(false);
@@ -143,7 +160,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
         setShowEpisodeSelector(false);
     }, []);
 
-    // Loading skeleton
     if (loading) {
         return (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
@@ -158,7 +174,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
         );
     }
 
-    // Error state
     if (error) {
         return (
             <div className="text-center py-12">
@@ -174,7 +189,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
         );
     }
 
-    // Empty state
     if (shows.length === 0) {
         return (
             <div className="text-center py-12">
@@ -192,7 +206,6 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
 
     return (
         <>
-            {/* Loading indicator para detalhes */}
             {isLoadingDetails && (
                 <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
                     <div className="bg-gray-900 rounded-lg p-6 flex items-center gap-3">
@@ -213,9 +226,9 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                     return (
                         <div
                             key={show.id}
-                            className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105"
+                            className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0c]"
                             onClick={(e) => handleShowInfo(show, e)}
-                            onTouchStart={(e) => handleTouchStart(e, show)}
+                            onTouchStart={handleTouchStart}
                             onTouchEnd={(e) => handleTouchEnd(e, show)}
                             role="button"
                             tabIndex={0}
@@ -235,15 +248,13 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                                     draggable="false"
                                 />
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
-                                    <button
-                                        className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform pointer-events-none"
-                                        aria-label={`Assistir ${title}`}
-                                    >
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <div className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-indigo-600/50">
                                         <Play className="w-6 h-6 text-white fill-current" />
-                                    </button>
+                                    </div>
                                 </div>
 
+                                {/* ⭐ Rating — canto superior direito */}
                                 {show.vote_average && show.vote_average > 0 && (
                                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
@@ -253,6 +264,7 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                                     </div>
                                 )}
 
+                                {/* 🏷️ Bandeira/ícone — canto superior esquerdo */}
                                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
                                     {originCountry === 'JP' ? (
                                         <span className="text-orange-400 text-xs">🇯🇵</span>
@@ -263,14 +275,33 @@ const TVShowsGrid = ({ category = 'popular', limit = 10, originCountry }: TVShow
                                     )}
                                 </div>
 
+                                {/* 🔖 Watchlist — acima da barra de título */}
+                                {/* No mobile fica sempre visível; no desktop aparece no hover */}
+                                <div
+                                    className="absolute bottom-16 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                >
+                                    <WatchlistButton
+                                        id={show.id}
+                                        mediaType="tv"
+                                        title={title}
+                                        posterPath={show.poster_path}
+                                        voteAverage={show.vote_average}
+                                        releaseDate={show.first_air_date}
+                                        category={mediaCategory}
+                                    />
+                                </div>
+
+                                {/* 📝 Barra de título — canto inferior */}
                                 <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
                                     <div className="space-y-0.5">
                                         <div className="text-white text-sm font-semibold truncate">
                                             {title}
                                         </div>
-                                        <div className="text-indigo-400 text-xs">
-                                            {year}
-                                        </div>
+                                        <div className="text-indigo-400 text-xs">{year}</div>
                                     </div>
                                 </div>
                             </div>

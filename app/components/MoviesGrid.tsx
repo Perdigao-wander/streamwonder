@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Play, Star, Film, AlertCircle } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
-import {useRouter} from "next/navigation";
+import { WatchlistButton } from '@/components/WatchlistButton';
+import { useRouter } from 'next/navigation';
 
 interface Movie {
     id: number;
@@ -87,8 +88,7 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
         };
 
         fetchItems();
-    }, [type, initialCategory, limit]); // ✅ Dependências corretas
-
+    }, [type, initialCategory, limit]);
 
     const handleShowInfo = useCallback(async (movie: Movie, event?: React.MouseEvent | React.TouchEvent | React.KeyboardEvent) => {
         if (event) {
@@ -101,13 +101,11 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
         router.push(`/${mediaType}/${movie.id}`);
     }, [router]);
 
-    // Handler para touch start (identificar scroll vs clique)
-    const handleTouchStart = useCallback((e: React.TouchEvent, item: Movie) => {
+    const handleTouchStart = useCallback((e: React.TouchEvent) => {
         const touch = e.touches[0];
         setTouchStart({ x: touch.clientX, y: touch.clientY });
     }, []);
 
-    // Handler para touch end (detectar se foi clique ou scroll)
     const handleTouchEnd = useCallback((e: React.TouchEvent, item: Movie) => {
         if (!touchStart) return;
 
@@ -123,19 +121,16 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
         setTouchStart(null);
     }, [touchStart, handleShowInfo]);
 
-    // Fechar player com segurança
     const handleClosePlayer = useCallback(() => {
         setShowPlayer(false);
         setSelectedItem(null);
     }, []);
 
-    // Formatar data
     const formatYear = (dateString?: string) => {
         if (!dateString) return 'Em breve';
         return dateString.split('-')[0];
     };
 
-    // Formatar nota
     const formatRating = (rating?: number) => {
         if (!rating || rating === 0) return null;
         return rating.toFixed(1);
@@ -193,9 +188,9 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
                         <div
                             key={item.id}
                             ref={el => { cardRefs.current[item.id] = el; }}
-                            className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105"
+                            className="group cursor-pointer transition-transform duration-300 active:scale-95 hover:scale-105 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0c]"
                             onClick={(e) => handleShowInfo(item, e)}
-                            onTouchStart={(e) => handleTouchStart(e, item)}
+                            onTouchStart={handleTouchStart}
                             onTouchEnd={(e) => handleTouchEnd(e, item)}
                             role="button"
                             tabIndex={0}
@@ -219,15 +214,13 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
                                     }}
                                 />
 
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center">
-                                    <button
-                                        className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform pointer-events-none"
-                                        aria-label={`Assistir ${title}`}
-                                    >
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 group-active:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <div className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-indigo-600/50">
                                         <Play className="w-6 h-6 text-white fill-current" />
-                                    </button>
+                                    </div>
                                 </div>
 
+                                {/* ⭐ Rating — canto superior direito */}
                                 {rating && (
                                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
@@ -237,10 +230,30 @@ const MoviesGrid = ({ type = 'movie', initialCategory = 'now_playing', limit = 1
                                     </div>
                                 )}
 
+                                {/* 🎬 Ícone de filme — canto superior esquerdo */}
                                 <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
                                     <Film className="w-3 h-3 text-indigo-500" />
                                 </div>
 
+                                {/* 🔖 Watchlist — acima da barra de título */}
+                                <div
+                                    className="absolute bottom-16 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onTouchStart={(e) => e.stopPropagation()}
+                                    onTouchEnd={(e) => e.stopPropagation()}
+                                    onKeyDown={(e) => e.stopPropagation()}
+                                >
+                                    <WatchlistButton
+                                        id={item.id}
+                                        mediaType="movie"
+                                        title={title}
+                                        posterPath={item.poster_path}
+                                        voteAverage={item.vote_average}
+                                        releaseDate={item.release_date || item.first_air_date}
+                                    />
+                                </div>
+
+                                {/* 📝 Barra de título — canto inferior */}
                                 <div className="absolute bottom-2 left-2 right-2 bg-black/70 backdrop-blur-sm rounded-lg px-2 py-1.5 text-center">
                                     <div className="space-y-0.5">
                                         <div className="text-white text-xs font-semibold truncate">

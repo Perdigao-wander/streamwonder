@@ -5,12 +5,21 @@ import TVShowsGrid from './TVShowsGrid';
 interface AnimeGridProps {
     category?: 'popular' | 'top_rated' | 'airing_today' | 'on_the_air';
     limit?: number;
-    genre?: string; // Para filtrar por gênero específico (ex: 'action', 'comedy')
+    genre?: string;
+    year?: number | string;
 }
 
-const AnimeGrid = ({ category = 'popular', limit = 10 }: AnimeGridProps) => {
-    // Pode adicionar lógica extra aqui se necessário
-    return <TVShowsGrid category={category} limit={limit} originCountry="JP" />;
+const AnimeGrid = ({ category, limit = 10, year }: AnimeGridProps) => {
+    return (
+        <TVShowsGrid
+            category={category}
+            limit={limit}
+            originCountry="JP"
+            year={year}
+            mediaCategory="animes"
+
+        />
+    );
 };
 
 export default AnimeGrid;

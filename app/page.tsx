@@ -14,6 +14,10 @@ import AnimeGrid from "@/app/components/AnimeGrid";
 import ChannelsGrid from "@/app/components/ChannelsGrid";
 
 export default function Home() {
+
+    const currentYear = new Date().getFullYear();
+
+
     return (
         <div className="min-h-screen relative bg-gradient-to-b from-[#05050a] via-[#0a0a1a] to-[#0f0f13] text-white overflow-hidden">
             <div className="fixed inset-0 z-0">
@@ -69,7 +73,7 @@ export default function Home() {
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                                 </Link>
                             </div>
-                            <TVShowsGrid/>
+                            <TVShowsGrid mediaCategory="series" year={currentYear} category="top_rated"/>
                         </section>
 
                         {/* Seção de Doramas */}
@@ -90,7 +94,7 @@ export default function Home() {
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                                 </Link>
                             </div>
-                            <DoramasGrid/>
+                            <DoramasGrid year={currentYear} category="top_rated"/>
                         </section>
 
                         {/* Seção de Animes */}
@@ -111,7 +115,7 @@ export default function Home() {
                                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                                 </Link>
                             </div>
-                            <AnimeGrid category="top_rated" limit={10} />
+                            <AnimeGrid year={currentYear} category="top_rated" limit={10} />
                         </section>
 
                         {/* Seção de HQs*/}
