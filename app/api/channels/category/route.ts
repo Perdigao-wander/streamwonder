@@ -1,25 +1,27 @@
 import { NextResponse } from 'next/server';
-import { HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, WAREZCDN_API } from "@/lib/utils";
+import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, PROXY_URL, WAREZCDN_API} from "@/lib/utils";
 import hooman from 'hooman';
+import { HttpsProxyAgent } from 'hpagent'; // Importe o agente
 
-const BLOCKED_CATEGORIES = ['adulto', 'adult', '24-horas', 'canais-abertos', 'casa-do-patrao'];
-
+const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-do-patrao'];
 export async function GET() {
     try {
         const response = await hooman.get(
             `${WAREZCDN_API}?category=channel_categories&format=json`,
             {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-                    'Referer': 'https://warezcdn.sbs/',
-                },
                 context: {
-                    cloudflareRetry: 5,
                     captchaKey: HOOMAN_CAPTCHA_KEY,
                     rucaptcha: HOOMAN_RUCAPTCHA,
                 },
+                agent: {
+                    https: new HttpsProxyAgent({
+                        keepAlive: true,
+                        keepAliveMsecs: 1000,
+                        maxSockets: 256,
+                        maxFreeSockets: 256,
+                        proxy: PROXY_URL
+                    })
+                }
             }
         );
 

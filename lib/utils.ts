@@ -37,3 +37,7 @@ export const HOOMAN_CAPTCHA_KEY: string = process.env.HOOMAN_CAPTCHA_KEY ?? (() 
 export const HOOMAN_RUCAPTCHA: string = process.env.HOOMAN_RUCAPTCHA ?? (() => {
   throw new Error("❌ HOOMAN_RUCAPTCHA  definida no .env");
 })();
+
+export const PROXY_URL: string = process.env.PROXY_URL ?? (() => {
+  throw new Error("❌ PROXY_URL  definida no .env");
+})();
