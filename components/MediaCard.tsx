@@ -11,7 +11,7 @@ interface MediaCardProps {
     onShowInfo: (item: MediaItem) => void;
     badge?: React.ReactNode;
     mediaType?: 'movie' | 'tv';
-    category?: MediaCategory;    // 🆕
+    category?: MediaCategory;
 }
 
 export function MediaCard({ item, onShowInfo, badge, mediaType, category }: MediaCardProps) {
@@ -43,7 +43,6 @@ export function MediaCard({ item, onShowInfo, badge, mediaType, category }: Medi
             aria-label={`Ver detalhes de ${title}`}
         >
             <div className="relative rounded-xl overflow-hidden bg-gray-900">
-                {/* Imagem (com pointer-events-none para não interceptar cliques) */}
                 <img
                     src={
                         item.poster_path
@@ -56,21 +55,21 @@ export function MediaCard({ item, onShowInfo, badge, mediaType, category }: Medi
                     draggable={false}
                 />
 
-                {/* Overlay de hover — apenas visual, o clique é capturado pelo card */}
+                {/* Overlay de hover — apenas visual */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
                     <div className="bg-indigo-600 rounded-full p-3 transform scale-90 group-hover:scale-100 transition-transform shadow-lg shadow-indigo-600/50">
                         <Play className="w-6 h-6 text-white fill-current" />
                     </div>
                 </div>
 
-                {/* 🏷️ Badge (bandeira) — canto superior esquerdo */}
+                {/* 🏷️ Badge (bandeira) */}
                 {badge && (
                     <div className="absolute top-2 left-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1">
                         {badge}
                     </div>
                 )}
 
-                {/* ⭐ Rating — canto superior direito */}
+                {/* ⭐ Rating */}
                 {item.vote_average !== undefined && item.vote_average > 0 && (
                     <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
@@ -80,9 +79,9 @@ export function MediaCard({ item, onShowInfo, badge, mediaType, category }: Medi
                     </div>
                 )}
 
-                {/* 🔖 Watchlist — canto inferior esquerdo, só no hover */}
+                {/* 🔖 Watchlist — sempre visível no mobile, só no hover no desktop */}
                 <div
-                    className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
+                    className="absolute bottom-2 left-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                 >
