@@ -24,7 +24,7 @@ function getItemCategory(item: WatchlistItem): Exclude<Filter, 'all'> {
 
 export default function MinhaListaPage() {
     const { items, isHydrated, removeFromWatchlist, clearWatchlist } = useWatchlist();
-    const [filter, setFilter] = useState<Filter>('all');
+    const [filter, setFilter] = useState<Filter>('movie');
     const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
     // 🆕 Estado do player de canais
@@ -134,14 +134,6 @@ export default function MinhaListaPage() {
                     {items.length > 0 && (
                         <div className="mb-6 flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
                             <button
-                                onClick={() => setFilter('all')}
-                                className={`px-4 py-2 cursor-pointer rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                                    filter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                                }`}
-                            >
-                                Todos ({counts.all})
-                            </button>
-                            <button
                                 onClick={() => setFilter('movie')}
                                 className={`px-4 py-2 cursor-pointer rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
                                     filter === 'movie' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -185,6 +177,14 @@ export default function MinhaListaPage() {
                             >
                                 <Satellite className="w-4 h-4" />
                                 Canais ({counts.channels})
+                            </button>
+                            <button
+                                onClick={() => setFilter('all')}
+                                className={`px-4 py-2 cursor-pointer rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                                    filter === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                }`}
+                            >
+                                Todos ({counts.all})
                             </button>
                         </div>
                     )}
