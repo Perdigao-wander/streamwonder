@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, WAREZCDN_API} from "@/lib/utils";
+import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, PROXY_URL, WAREZCDN_API} from "@/lib/utils";
 import hooman from 'hooman';
+import {HttpsProxyAgent} from "hpagent";
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex'];
@@ -28,6 +29,15 @@ export async function GET(request: NextRequest) {
                     captchaKey: HOOMAN_CAPTCHA_KEY,
                     rucaptcha: HOOMAN_RUCAPTCHA,
                 },
+                agent: {
+                    https: new HttpsProxyAgent({
+                        keepAlive: true,
+                        keepAliveMsecs: 1000,
+                        maxSockets: 256,
+                        maxFreeSockets: 256,
+                        proxy: PROXY_URL
+                    })
+                }
             });
         const data = typeof response.body === 'string'
             ? JSON.parse(response.body)
