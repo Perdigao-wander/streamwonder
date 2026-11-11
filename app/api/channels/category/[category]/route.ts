@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
+import {WAREZCDN_API} from "@/lib/utils";
 
 export async function GET(
     request: NextRequest,
@@ -34,6 +34,8 @@ export async function GET(
         if (!genreId) {
             return NextResponse.json({ error: 'Categoria inválida' }, { status: 400 });
         }
+
+        console.log(genreId)
 
         const url = `${WAREZCDN_API}?category=canais&genre=${genreId}&format=json`;
         const response = await fetch(url);

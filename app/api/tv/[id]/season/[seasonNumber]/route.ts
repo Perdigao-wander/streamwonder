@@ -1,10 +1,6 @@
 // app/api/tv/[id]/season/[seasonNumber]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
-
-// ==================== TIPAGENS COMPLETAS ====================
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
 
 type GuestStar = {
     character: string;

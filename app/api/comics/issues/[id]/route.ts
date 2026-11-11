@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {cleanHtmlText} from "@/app/lib/utils";
-
-const COMIC_VINE_API_KEY = process.env.NEXT_PUBLIC_COMIC_VINE_API_KEY;
-const BASE_URL = process.env.NEXT_PUBLIC_COMIC_VINE_API_URL
-
-// Função para limpar o HTML
+import {COMIC_VINE_API_KEY, COMIC_VINE_API_URL} from "@/lib/utils";
 
 export async function GET(
     request: NextRequest,
@@ -14,7 +10,7 @@ export async function GET(
         const { id } = await params;
 
         const response = await fetch(
-            `${BASE_URL}/issue/4000-${id}/?api_key=${COMIC_VINE_API_KEY}&format=json`,
+            `${COMIC_VINE_API_URL}/issue/4000-${id}/?api_key=${COMIC_VINE_API_KEY}&format=json`,
             {
                 headers: {
                     'User-Agent': 'StreamWonder/1.0',

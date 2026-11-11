@@ -4,3 +4,27 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export const WAREZCDN_API: string = process.env.NEXT_PUBLIC_WAREZCDN_API ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_WAREZCDN_API não definida no .env");
+})();
+
+export const TMDB_BASE_URL: string = process.env.NEXT_PUBLIC_SERVER_API_URL ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_SERVER_API_URL não definida no .env");
+})();
+
+export const TMDB_TOKEN: string = process.env.NEXT_PUBLIC_API_TOKEN ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_API_TOKEN não definida no .env");
+})();
+
+export const API_KEY: string = process.env.NEXT_PUBLIC_API_KEY ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_API_KEY definida no .env");
+})();
+
+export const COMIC_VINE_API_KEY: string = process.env.NEXT_PUBLIC_COMIC_VINE_API_KEY ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_KEY  definida no .env");
+})();
+
+export const COMIC_VINE_API_URL: string = process.env.NEXT_PUBLIC_COMIC_VINE_API_URL ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_URL  definida no .env");
+})();

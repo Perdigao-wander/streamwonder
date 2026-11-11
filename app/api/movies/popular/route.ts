@@ -13,8 +13,8 @@ type Movie = {
     vote_count: number;
 }
 
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
+
 
 const BLOCKED_TITLES = [
     'Tayuan',

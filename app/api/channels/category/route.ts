@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
+import {WAREZCDN_API} from "@/lib/utils";
 
-const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
-
-// Categorias bloqueadas
 const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-do-patrao' ];
 
 export async function GET() {

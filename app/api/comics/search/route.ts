@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const COMIC_VINE_API_KEY = process.env.NEXT_PUBLIC_COMIC_VINE_API_KEY;
-const BASE_URL = process.env.NEXT_PUBLIC_COMIC_VINE_API_URL
+import {COMIC_VINE_API_KEY, COMIC_VINE_API_URL} from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -15,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     try {
         const response = await fetch(
-            `${BASE_URL}/issues/?api_key=${COMIC_VINE_API_KEY}&format=json&limit=${limit}&offset=${(parseInt(page) - 1) * parseInt(limit)}&filter=name:${encodeURIComponent(query)}`,
+            `${COMIC_VINE_API_URL}/issues/?api_key=${COMIC_VINE_API_KEY}&format=json&limit=${limit}&offset=${(parseInt(page) - 1) * parseInt(limit)}&filter=name:${encodeURIComponent(query)}`,
             {
                 headers: {
                     'User-Agent': 'StreamWonder/1.0',

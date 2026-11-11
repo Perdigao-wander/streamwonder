@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
+import {WAREZCDN_API} from "@/lib/utils";
 
 // Mapeamento de categorias/gêneros para a API do WarezCdn
 const GENRE_MAP: Record<string, string> = {

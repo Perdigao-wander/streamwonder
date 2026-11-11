@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const WAREZCDN_API = process.env.NEXT_PUBLIC_WAREZCDN_API;
+import {WAREZCDN_API} from "@/lib/utils";
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex'];

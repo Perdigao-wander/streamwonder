@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
 
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 const imdbCache = new Map<string, { imdbId: string | null; timestamp: number }>();
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias

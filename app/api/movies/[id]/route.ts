@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
 
 export async function GET(
     request: NextRequest,

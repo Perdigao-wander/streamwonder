@@ -8,11 +8,10 @@ interface PageProps {
     }>;
 }
 
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
 
 async function fetchMediaData(mediaType: string, id: string) {
     try {
-        const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-        const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
         const url = mediaType === 'movie'
             ? `${TMDB_BASE_URL}/movie/${id}?language=pt-BR`

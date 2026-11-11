@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
 
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_SERVER_API_URL;
-const TMDB_TOKEN = process.env.NEXT_PUBLIC_API_TOKEN;
 
 const ADULT_KEYWORDS = [
     '199513',  // porn
