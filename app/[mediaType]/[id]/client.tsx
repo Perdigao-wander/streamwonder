@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Star, Info, Film, Clock, ChevronDown, Play, Loader2, Tv, ArrowLeft } from 'lucide-react';
+import { Calendar, Star, Info, Film, Clock, ChevronDown, Play, Loader2, Tv } from 'lucide-react';
 import { cn } from "@/app/lib/utils";
 import VideoPlayer from "@/app/components/video-player";
+import { WatchlistButton } from '@/components/WatchlistButton';
+import { RecommendationsSection } from '@/components/RecommendationsSection';
 
 interface Genre {
     id: number;
@@ -63,10 +65,11 @@ interface TVDetails {
     number_of_seasons?: number;
     number_of_episodes?: number;
     status?: string;
+    origin_country?: string[];   // 🆕 p/ derivar categoria
 }
 
 interface Props {
-    initialData: any ;
+    initialData: any;
     mediaType: string;
     id: string;
 }
@@ -112,7 +115,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
         }));
     };
 
-    // Buscar gêneros baseado no tipo de mídia
     useEffect(() => {
         const fetchGenres = async () => {
             try {
@@ -140,7 +142,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
 
     useEffect(() => {
         const fetchMediaDetails = async () => {
-            // Se já temos dados iniciais, não precisa buscar
             if ((mediaType === 'movie' && movieData) || (mediaType === 'tv' && tvData)) {
                 setLoading(false);
                 return;
@@ -167,7 +168,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                     if (data.id) {
                         setTvData(data);
 
-                        // Definir temporada inicial
                         if (data.seasons && data.seasons.length > 0) {
                             const firstRealSeason = data.seasons.find((s: Season) => s.season_number !== 0);
                             if (firstRealSeason) {
@@ -194,7 +194,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
         }
     }, [id, mediaType, movieData, tvData]);
 
-    // Buscar episódios para séries
     useEffect(() => {
         if (mediaType !== 'tv' || !tvData?.seasons?.length || hasLoadedAll) return;
 
@@ -266,9 +265,16 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
         return genresList.length > 0 ? genresList : ['Geral'];
     };
 
+    // 🆕 Deriva a categoria do TV a partir de origin_country
+    const getTVCategory = (): 'series' | 'doramas' | 'animes' => {
+        const countries = tvData?.origin_country || [];
+        if (countries.includes('JP')) return 'animes';
+        if (countries.includes('KR') || countries.includes('CN')) return 'doramas';
+        return 'series';
+    };
+
     const genreNames = getGenreNames();
 
-    // Dados do filme
     const movieTitle = movieData?.title;
     const movieYear = movieData?.release_date?.split('-')[0] || 'Em breve';
     const movieRating = movieData?.vote_average?.toFixed(1) || 'N/A';
@@ -278,7 +284,6 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
     const moviePoster = movieData?.poster_path;
     const movieBackdrop = movieData?.backdrop_path;
 
-    // Dados da série
     const tvTitle = tvData?.name || tvData?.title;
     const tvYear = tvData?.first_air_date?.split('-')[0] || 'Em breve';
     const tvRating = tvData?.vote_average?.toFixed(1) || 'N/A';
@@ -353,7 +358,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
         );
     }
 
-    // Renderizar filme
+    // ============ FILME ============
     if (mediaType === 'movie' && movieData) {
         return (
             <>
@@ -434,19 +439,38 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                                     </p>
                                 </div>
 
-                                <button
-                                    onClick={handleWatch}
-                                    className="px-8 py-3 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
-                                >
-                                    <Play className="w-5 h-5 fill-current" />
-                                    Assistir Agora
-                                </button>
+                                {/* 🆕 Botões: Assistir + Minha Lista */}
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <button
+                                        onClick={handleWatch}
+                                        className="px-8 py-3 cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
+                                    >
+                                        <Play className="w-5 h-5 fill-current" />
+                                        Assistir Agora
+                                    </button>
+                                    <WatchlistButton
+                                        id={movieData.id}
+                                        mediaType="movie"
+                                        title={movieTitle || ''}
+                                        posterPath={moviePoster || null}
+                                        voteAverage={movieData.vote_average}
+                                        releaseDate={movieData.release_date}
+                                        variant="full"
+                                        className="px-6 py-3"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    {/* 🆕 Recomendações */}
+                    <RecommendationsSection
+                        mediaType="movie"
+                        mediaId={movieData.id}
+                        limit={12}
+                    />
                 </div>
 
-                {/* Video Player */}
                 {showPlayer && selectedMovie && (
                     <VideoPlayer
                         movieId={selectedMovie.id}
@@ -460,7 +484,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
         );
     }
 
-    // Renderizar série
+    // ============ SÉRIE ============
     if (mediaType === 'tv' && tvData) {
         return (
             <>
@@ -475,7 +499,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-transparent" />
                         </div>
                     )}
-                   <div className="container mx-auto px-4 py-8">
+                    <div className="container mx-auto px-4 py-8">
                         <div className="flex flex-col lg:flex-row gap-8 mb-8">
                             <div className="flex-shrink-0 w-56 lg:w-64 mx-auto lg:mx-0">
                                 <img
@@ -553,6 +577,7 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                                     </p>
                                 </div>
 
+                                {/* 🆕 Seletor de temporada + Minha Lista */}
                                 <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
                                     <div className="relative">
                                         <button
@@ -603,11 +628,21 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                                             </>
                                         )}
                                     </div>
+
+                                    <WatchlistButton
+                                        id={tvData.id}
+                                        mediaType="tv"
+                                        title={tvTitle || ''}
+                                        posterPath={tvPoster || null}
+                                        voteAverage={tvData.vote_average}
+                                        releaseDate={tvData.first_air_date}
+                                        category={getTVCategory()}
+                                        variant="full"
+                                    />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Episódios */}
                         {tvSeasons.length > 0 && (
                             <div className="mt-8 pt-8 border-t border-white/10">
                                 {isLoadingEpisodes && !hasLoadedAll ? (
@@ -680,9 +715,16 @@ export default function MediaInfoClient({ initialData, mediaType, id }: Props) {
                             </div>
                         )}
                     </div>
+
+                    {/* 🆕 Recomendações */}
+                    <RecommendationsSection
+                        mediaType="tv"
+                        mediaId={tvData.id}
+                        mediaCategory={getTVCategory()}
+                        limit={12}
+                    />
                 </div>
 
-                {/* Video Player for TV Show */}
                 {showPlayer && selectedTV && (
                     <VideoPlayer
                         tvId={selectedTV.id}
