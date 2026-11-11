@@ -50,7 +50,9 @@ export default function DoramasPage() {
             if (filters.selectedGenres.length) {
                 queryParams.append('with_genres', filters.selectedGenres.join(','));
             }
-            if (filters.selectedYear) {
+            // 🗓️ Só aplica o ano quando NÃO estiver buscando.
+            //    Durante a busca, mostra resultados de TODOS os anos.
+            if (filters.selectedYear && !filters.searchQuery) {
                 queryParams.append('first_air_date_year', filters.selectedYear);
             }
             if (filters.minRating) {
