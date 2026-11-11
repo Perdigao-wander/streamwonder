@@ -250,7 +250,7 @@ export default function MinhaListaPage() {
                                                     setPendingAction({ type: 'remove-item', item });
                                                 }}
                                                 aria-label={`Remover ${item.title} da lista`}
-                                                className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                                                className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-all cursor-pointer"
                                             >
                                                 <X className="w-3.5 h-3.5" />
                                             </button>
@@ -291,7 +291,7 @@ export default function MinhaListaPage() {
                                                 setPendingAction({ type: 'remove-item', item });
                                             }}
                                             aria-label={`Remover ${item.title} da lista`}
-                                            className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                                            className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-all cursor-pointer"
                                         >
                                             <X className="w-3.5 h-3.5" />
                                         </button>
