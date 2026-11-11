@@ -1,14 +1,19 @@
 import { NextResponse } from 'next/server';
 import {WAREZCDN_API} from "@/lib/utils";
+import hooman from 'hooman';
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-do-patrao' ];
 
 export async function GET() {
     try {
-        const response = await fetch(`${WAREZCDN_API}?category=channel_categories&format=json`);
-        console.log(response);
+        const response = await hooman.get(`${WAREZCDN_API}?category=channel_categories&format=json`);
 
-        const data = await response.json();
+        const data = typeof response.body === 'string'
+            ? JSON.parse(response.body)
+            : response.body;
+
+        console.log(JSON.parse(response.body))
+
 
         if (data.success) {
             // Filtrar categorias adultas

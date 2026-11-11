@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {WAREZCDN_API} from "@/lib/utils";
+import hooman from 'hooman';
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex'];
@@ -21,8 +22,12 @@ export async function GET(request: NextRequest) {
         if (genre) {
             url += `&genre=${encodeURIComponent(genre)}`;
         }
-        const response = await fetch(url);
-        const data = await response.json();
+        const response = await hooman.get(url);
+        const data = typeof response.body === 'string'
+            ? JSON.parse(response.body)
+            : response.body;
+
+        console.log(JSON.parse(response.body))
 
         if (data.success) {
             // Filtrar canais adultos
