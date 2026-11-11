@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import {PROXY_URL, WAREZCDN_API} from "@/lib/utils";
+import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, PROXY_URL, WAREZCDN_API} from "@/lib/utils";
 import hooman from "hooman";
 import {HttpsProxyAgent} from "hpagent";
 
@@ -42,10 +42,10 @@ export async function GET(
         const url = `${WAREZCDN_API}?category=canais&genre=${genreId}&format=json`;
         const response = await hooman.get(url,
             {
-/*                context: {
+                context: {
                     captchaKey: HOOMAN_CAPTCHA_KEY,
                     rucaptcha: HOOMAN_RUCAPTCHA,
-                },*/
+                },
                 agent: {
                     https: new HttpsProxyAgent({
                         keepAlive: true,

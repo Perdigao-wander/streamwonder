@@ -29,14 +29,15 @@ export const COMIC_VINE_API_URL: string = process.env.NEXT_PUBLIC_COMIC_VINE_API
   throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_URL não definida no .env");
 })();
 
-/*export const HOOMAN_CAPTCHA_KEY: string = process.env.HOOMAN_CAPTCHA_KEY ?? (() => {
-  throw new Error("❌ HOOMAN_CAPTCHA_KEY não definida no .env");
+
+export const HOOMAN_CAPTCHA_KEY: string = process.env.NEXT_PUBLIC_HOOMAN_CAPTCHA_KEY ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_HOOMAN_CAPTCHA_KEY não definida no .env");
 })();
 
-export const HOOMAN_RUCAPTCHA: string = process.env.HOOMAN_RUCAPTCHA ?? (() => {
-  throw new Error("❌ HOOMAN_RUCAPTCHA não definida no .env");
-})();*/
+export const HOOMAN_RUCAPTCHA: string = process.env.NEXT_PUBLIC_HOOMAN_RUCAPTCHA ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_HOOMAN_RUCAPTCHA não definida no .env");
+})();
 
-export const PROXY_URL: string = process.env.PROXY_URL ?? (() => {
-  throw new Error("❌ PROXY_URL não definida no .env");
+export const PROXY_URL: string = process.env.NEXT_PUBLIC_PROXY_URL ?? (() => {
+  throw new Error("❌ NEXT_PUBLIC_PROXY_URL não definida no .env");
 })();
