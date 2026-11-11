@@ -6,6 +6,8 @@ const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-
 export async function GET() {
     try {
         const response = await fetch(`${WAREZCDN_API}?category=channel_categories&format=json`);
+        console.log(response);
+
         const data = await response.json();
 
         if (data.success) {
