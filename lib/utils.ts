@@ -18,26 +18,25 @@ export const TMDB_TOKEN: string = process.env.NEXT_PUBLIC_API_TOKEN ?? (() => {
 })();
 
 export const API_KEY: string = process.env.NEXT_PUBLIC_API_KEY ?? (() => {
-  throw new Error("❌ NEXT_PUBLIC_API_KEY definida no .env");
+  throw new Error("❌ NEXT_PUBLIC_API_KEY não definida no .env");
 })();
 
 export const COMIC_VINE_API_KEY: string = process.env.NEXT_PUBLIC_COMIC_VINE_API_KEY ?? (() => {
-  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_KEY  definida no .env");
+  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_KEY não definida no .env");
 })();
 
 export const COMIC_VINE_API_URL: string = process.env.NEXT_PUBLIC_COMIC_VINE_API_URL ?? (() => {
-  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_URL  definida no .env");
+  throw new Error("❌ NEXT_PUBLIC_COMIC_VINE_API_URL não definida no .env");
 })();
 
-
 export const HOOMAN_CAPTCHA_KEY: string = process.env.HOOMAN_CAPTCHA_KEY ?? (() => {
-  throw new Error("❌ HOOMAN_CAPTCHA_KEY  definida no .env");
+  throw new Error("❌ HOOMAN_CAPTCHA_KEY não definida no .env");
 })();
 
 export const HOOMAN_RUCAPTCHA: string = process.env.HOOMAN_RUCAPTCHA ?? (() => {
-  throw new Error("❌ HOOMAN_RUCAPTCHA  definida no .env");
+  throw new Error("❌ HOOMAN_RUCAPTCHA não definida no .env");
 })();
 
 export const PROXY_URL: string = process.env.PROXY_URL ?? (() => {
-  throw new Error("❌ PROXY_URL  definida no .env");
+  throw new Error("❌ PROXY_URL não definida no .env");
 })();
