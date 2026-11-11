@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Tv, SearchIcon, X, Filter } from 'lucide-react';
+import { Tv, SearchIcon, X } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useGenres } from '@/hooks/useGenres';
 import { useFilterPersistence } from '@/hooks/useFilterPersistence';
@@ -11,9 +11,18 @@ import { MediaCard } from '@/components/MediaCard';
 import { MediaPagination } from '@/components/MediaPagination';
 import { MediaItem } from '@/types/media';
 
+const currentYear = new Date().getFullYear();
+
 export default function SeriesContent() {
     const { genres } = useGenres();
-    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('series', 'vote_count.desc');
+
+    // 🆕 Defaults: ano atual aplicado na primeira carga + após "Limpar filtros"
+    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence(
+        'series',
+        'vote_count.desc',
+        { selectedYear: String(currentYear) }
+    );
+
     const {
         searchQuery,
         selectedGenres,
@@ -22,9 +31,6 @@ export default function SeriesContent() {
         minRating,
         currentPage,
     } = filters;
-
-    const currentYear = new Date().getFullYear();
-    const [hasInitializedYear, setHasInitializedYear] = useState(false);
 
     const sortOptions = [
         { value: 'vote_count.desc', label: 'Mais Votados' },
@@ -41,20 +47,11 @@ export default function SeriesContent() {
     const [loadingMore, setLoadingMore] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
 
-    // Atualizar o campo temporário quando o filtro de busca mudar externamente
+    // Sincroniza tempSearchQuery com o filtro atual
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTempSearchQuery(searchQuery);
     }, [searchQuery]);
-
-    // ⬇️ NOVO: aplica o ano atual como filtro padrão na primeira carga
-    useEffect(() => {
-        if (isInitialized && !hasInitializedYear && !selectedYear) {
-            updateFilter({ selectedYear: String(currentYear), currentPage: 1 });
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setHasInitializedYear(true);
-        }
-    }, [isInitialized, hasInitializedYear, selectedYear, currentYear, updateFilter]);
 
     // Buscar séries sempre que os filtros mudarem
     const fetchSeries = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
@@ -73,15 +70,16 @@ export default function SeriesContent() {
                 'with_origin_country',
                 'US|GB|CA|AU|FR|DE|ES|IT|BR|MX|AR|NL|SE|NO|DK|IE|NZ|AT|BE|CH|FI|IS|LU|PT|PL|CZ|HU|RO|GR|HR|RS|BG|CL|CO|PE|UY|VE|EC|BO|PY|CR|PA|DO|GT|HN|SV|NI|ZA|IL|TR|IN|TH|PH|ID|MY|SG|TW|AE|SA'
             );
-            // queryParams.append('exclude_countries', 'JP,KR,CN,ID');
-           // queryParams.append('without_genres', '16'); // exclui animação (anime + animação ocidental)
 
             if (selectedGenres.length > 0) {
                 queryParams.append('with_genres', selectedGenres.join(','));
             }
-            if (selectedYear) {
+
+            // 🗓️ Ano: aplica SOMENTE quando NÃO estiver buscando
+            if (!searchQuery && selectedYear) {
                 queryParams.append('first_air_date_year', selectedYear);
             }
+
             if (minRating) {
                 queryParams.append('vote_average.gte', minRating);
             }
@@ -116,7 +114,7 @@ export default function SeriesContent() {
         }
     }, [searchQuery, selectedGenres, sortBy, selectedYear, minRating]);
 
-    // Efeito para buscar quando os filtros mudarem ou a página mudar
+    // Busca quando os filtros mudarem ou a página mudar
     useEffect(() => {
         if (isInitialized) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -124,7 +122,7 @@ export default function SeriesContent() {
         }
     }, [searchQuery, selectedGenres, sortBy, selectedYear, minRating, currentPage, isInitialized, fetchSeries]);
 
-    // Handlers que atualizam os filtros via hook
+    // Handlers
     const performSearch = () => {
         if (tempSearchQuery === searchQuery) return;
         updateFilter({ searchQuery: tempSearchQuery, currentPage: 1 });
@@ -217,31 +215,31 @@ export default function SeriesContent() {
                     </div>
 
                     <div className="mb-8 space-y-4">
-                            <MediaSearchBar
-                                tempSearchQuery={tempSearchQuery}
-                                onTempQueryChange={setTempSearchQuery}
-                                onSearch={performSearch}
-                                onClear={clearSearch}
-                                onKeyPress={handleKeyPress}
-                                placeholder="Pesquise as series aqui..."
-                            />
-                            <MediaFiltersPanel
-                                showFilters={showFilters}
-                                onToggleFilters={() => setShowFilters(!showFilters)}
-                                sortBy={sortBy}
-                                onSortChange={handleSortChange}
-                                selectedYear={selectedYear}
-                                onYearChange={handleYearChange}
-                                minRating={minRating}
-                                onRatingChange={handleRatingChange}
-                                genres={genres}
-                                selectedGenres={selectedGenres}
-                                onToggleGenre={toggleGenre}
-                                onClearFilters={resetFilters}
-                                yearLabel="Ano de lançamento"
-                                activeFiltersCount={activeFiltersCount}
-                                sortOptions={sortOptions}
-                            />
+                        <MediaSearchBar
+                            tempSearchQuery={tempSearchQuery}
+                            onTempQueryChange={setTempSearchQuery}
+                            onSearch={performSearch}
+                            onClear={clearSearch}
+                            onKeyPress={handleKeyPress}
+                            placeholder="Pesquise as series aqui..."
+                        />
+                        <MediaFiltersPanel
+                            showFilters={showFilters}
+                            onToggleFilters={() => setShowFilters(!showFilters)}
+                            sortBy={sortBy}
+                            onSortChange={handleSortChange}
+                            selectedYear={selectedYear}
+                            onYearChange={handleYearChange}
+                            minRating={minRating}
+                            onRatingChange={handleRatingChange}
+                            genres={genres}
+                            selectedGenres={selectedGenres}
+                            onToggleGenre={toggleGenre}
+                            onClearFilters={resetFilters}
+                            yearLabel="Ano de lançamento"
+                            activeFiltersCount={activeFiltersCount}
+                            sortOptions={sortOptions}
+                        />
                     </div>
 
                     {searchQuery && (

@@ -12,7 +12,6 @@ import { MediaCard } from '@/components/MediaCard';
 import { MediaPagination } from '@/components/MediaPagination';
 import { MediaItem, Genre } from '@/types/media';
 
-
 export default function MoviesPage() {
     const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('movies', 'popularity.desc');
     const { genres } = useGenres();
@@ -32,8 +31,6 @@ export default function MoviesPage() {
         { value: 'vote_count.desc', label: 'Mais Votados' },
     ];
 
-
-
     const fetchMovies = useCallback(async (page: number = 1, isLoadMore: boolean = false) => {
         if (isLoadMore) setLoadingMore(true);
         else setLoading(true);
@@ -42,9 +39,19 @@ export default function MoviesPage() {
             const queryParams = new URLSearchParams();
             queryParams.append('sort_by', filters.sortBy);
             queryParams.append('page', page.toString());
-            if (filters.selectedGenres.length) queryParams.append('with_genres', filters.selectedGenres.join(','));
-            if (filters.selectedYear) queryParams.append('primary_release_year', filters.selectedYear);
-            if (filters.minRating) queryParams.append('vote_average.gte', filters.minRating);
+
+            if (filters.selectedGenres.length) {
+                queryParams.append('with_genres', filters.selectedGenres.join(','));
+            }
+
+            // 🗓️ Ano: aplica SOMENTE quando NÃO estiver buscando
+            if (!filters.searchQuery && filters.selectedYear) {
+                queryParams.append('primary_release_year', filters.selectedYear);
+            }
+
+            if (filters.minRating) {
+                queryParams.append('vote_average.gte', filters.minRating);
+            }
 
             let url = '';
             const isSearching = !!filters.searchQuery;

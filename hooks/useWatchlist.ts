@@ -56,8 +56,9 @@ export function useWatchlist() {
         return () => window.removeEventListener(SYNC_EVENT, handler);
     }, []);
 
+// Em useWatchlist.ts
     const isInWatchlist = useCallback(
-        (id: number, mediaType: 'movie' | 'tv') =>
+        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') =>   // 🆕
             items.some(item => item.id === id && item.mediaType === mediaType),
         [items]
     );
@@ -74,14 +75,16 @@ export function useWatchlist() {
         });
     }, []);
 
-    const removeFromWatchlist = useCallback((id: number, mediaType: 'movie' | 'tv') => {
-        setItems(prev => {
-            const next = prev.filter(i => !(i.id === id && i.mediaType === mediaType));
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
-            window.dispatchEvent(new CustomEvent(SYNC_EVENT));
-            return next;
-        });
-    }, []);
+    const removeFromWatchlist = useCallback(
+        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') => {  // 🆕
+            setItems(prev => {
+                const next = prev.filter(i => !(i.id === id && i.mediaType === mediaType));
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+                window.dispatchEvent(new CustomEvent(SYNC_EVENT));
+                return next;
+            });
+        }, []
+    );
 
     const toggleWatchlist = useCallback((item: Omit<WatchlistItem, 'addedAt'>) => {
         if (isInWatchlist(item.id, item.mediaType)) {

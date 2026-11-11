@@ -1,4 +1,3 @@
-// app/doramas/page.tsx
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -13,13 +12,15 @@ import { useGenres } from '@/hooks/useGenres';
 import { MediaItem } from '@/types/media';
 
 export default function DoramasPage() {
-    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('doramas', 'vote_count.desc');
+    const currentYear = new Date().getFullYear();
+    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence(
+        'doramas',
+        'vote_count.desc',
+        { selectedYear: String(currentYear) }   // 🆕
+    );
     const { genres } = useGenres();
     const genresSemAnimacao = genres.filter((g) => g.id !== 16);
 
-    // 🗓️ Ano atual + flag para aplicar o filtro apenas uma vez
-    const currentYear = new Date().getFullYear();
-    const [hasInitializedYear, setHasInitializedYear] = useState(false);
 
     const [tempSearchQuery, setTempSearchQuery] = useState(filters.searchQuery);
     const [showFilters, setShowFilters] = useState(false);
@@ -87,17 +88,6 @@ export default function DoramasPage() {
         }
     }, [filters]);
 
-    // 🗓️ Aplica o ano atual como filtro padrão na primeira carga
-    useEffect(() => {
-        if (isInitialized && !hasInitializedYear) {
-            if (!filters.selectedYear) {
-                updateFilter({ selectedYear: String(currentYear), currentPage: 1 });
-            }
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setHasInitializedYear(true);
-        }
-    }, [isInitialized, hasInitializedYear, filters.selectedYear, currentYear, updateFilter]);
-
     // Sincroniza tempSearchQuery com o filtro atual
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -106,11 +96,11 @@ export default function DoramasPage() {
 
     // Busca quando os filtros ou página mudam (só depois de inicializar o ano)
     useEffect(() => {
-        if (isInitialized && hasInitializedYear) {
+        if (isInitialized) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             fetchDoramas(filters.currentPage, false);
         }
-    }, [filters, isInitialized, hasInitializedYear, fetchDoramas]);
+    }, [filters, isInitialized, fetchDoramas]);
 
     // Handlers
     const performSearch = () => {
@@ -167,7 +157,7 @@ export default function DoramasPage() {
     const activeFiltersCount = filters.selectedGenres.length + (filters.selectedYear ? 1 : 0) + (filters.minRating ? 1 : 0);
     const isSearching = !!filters.searchQuery;
 
-    if (!isInitialized || !hasInitializedYear || (loading && doramas.length === 0)) {
+    if (!isInitialized || (loading && doramas.length === 0)) {
         return (
             <>
                 <Navbar />

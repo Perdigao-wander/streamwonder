@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Monitor, Tv, Loader2 } from 'lucide-react';
 import ChannelPlayer from './ChannelPlayer';
+import { WatchlistButton } from '@/components/WatchlistButton';
 
 interface Channel {
     id: string;
@@ -23,7 +24,7 @@ interface ChannelsGridProps {
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
 const BLOCKED_KEYWORDS = ['xxx', 'sex', 'adult', 'porn', 'hot', 'dreamsex', 'jennylive'];
 
-const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) => {
+const ChannelsGrid = ({ limit = 12, category = 'desenhos' }: ChannelsGridProps) => {
     const [channels, setChannels] = useState<Channel[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -57,7 +58,6 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
                 const data = await response.json();
 
                 if (data.channels) {
-                    // Filtrar canais adultos e limitar
                     const safeChannels = data.channels
                         .filter((ch: Channel) => !isAdultChannel(ch) && ch.is_active !== false)
                         .slice(0, limit);
@@ -127,7 +127,7 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
                     <div
                         key={channel.id}
                         onClick={() => handleChannelClick(channel)}
-                        className="group cursor-pointer"
+                        className="group cursor-pointer relative"
                     >
                         <div className="bg-gray-800/50 hover:bg-indigo-600/20 rounded-xl border border-gray-700 hover:border-indigo-500 transition-all duration-300 overflow-hidden">
                             {/* Logo do canal */}
@@ -136,7 +136,9 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
                                     <img
                                         src={channel.logo_url}
                                         alt={channel.name}
-                                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                        className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300 pointer-events-none select-none"
+                                        loading="lazy"
+                                        draggable={false}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
                                         }}
@@ -157,6 +159,22 @@ const ChannelsGrid = ({ limit = 12, category="desenhos" }: ChannelsGridProps) =>
                                     {channel.category || 'Canal'}
                                 </p>
                             </div>
+                        </div>
+
+                        {/* 🔖 Watchlist — sempre visível no mobile, no hover no desktop */}
+                        <div
+                            className="absolute top-2 right-2 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => e.stopPropagation()}
+                        >
+                            <WatchlistButton
+                                id={channel.id}
+                                mediaType="channel"
+                                title={channel.name}
+                                posterPath={channel.logo_url || null}
+                                embedUrl={channel.embed_url}
+                                channelCategory={channel.category}
+                            />
                         </div>
                     </div>
                 ))}

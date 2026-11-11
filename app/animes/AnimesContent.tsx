@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { JapaneseYen, SearchIcon, X } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
 import { useFilterPersistence } from '@/hooks/useFilterPersistence';
@@ -12,9 +12,17 @@ import { MediaItem } from '@/types/media';
 import { useGenres } from '@/hooks/useGenres';
 
 const ANIMATION_GENRE_ID = 16;
+const currentYear = new Date().getFullYear();
 
 export default function AnimesPage() {
-    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence('animes', 'vote_count.desc');
+    const { filters, updateFilter, resetFilters, isInitialized } = useFilterPersistence(
+        'animes',
+        'vote_count.desc',
+        {
+            selectedGenres: [ANIMATION_GENRE_ID],
+            selectedYear: String(currentYear),
+        }
+    );
     const { genres } = useGenres();
 
     const [tempSearchQuery, setTempSearchQuery] = useState(filters.searchQuery);
@@ -23,9 +31,6 @@ export default function AnimesPage() {
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [totalPages, setTotalPages] = useState(1);
-
-    const hasSetDefaultGenre = useRef(false);
-    const currentYear = new Date().getFullYear();
 
     const sortOptions = [
         { value: 'vote_count.desc', label: '🗳️ Mais Votados' },
@@ -48,29 +53,25 @@ export default function AnimesPage() {
             // 🌏 Coreia, China e Japão
             queryParams.append('with_origin_country', 'KR|CN|JP');
 
-            // 🎨 Gênero Animação (16) — sempre presente
+            // 🎨 Gênero Animação (16) — vem do default, mas mantém fallback
             if (filters.selectedGenres.length) {
                 queryParams.append('with_genres', filters.selectedGenres.join(','));
             } else {
                 queryParams.append('with_genres', String(ANIMATION_GENRE_ID));
             }
 
-            // 🗓️ Ano atual por padrão, ou o que o usuário escolher
-            if (filters.selectedYear) {
+            // 🗓️ Ano: aplica SOMENTE quando NÃO estiver buscando
+            if (!filters.searchQuery && filters.selectedYear) {
                 queryParams.append('first_air_date_year', filters.selectedYear);
-            } else {
-                queryParams.append('first_air_date_year', String(currentYear));
             }
 
             if (filters.minRating) {
                 queryParams.append('vote_average.gte', filters.minRating);
             }
 
-            let url = '';
             const isSearching = !!filters.searchQuery;
+            let url = '';
             if (isSearching) {
-                queryParams.delete("first_air_date_year")
-                queryParams.append('first_air_date_year', filters.selectedYear);
                 url = '/api/tv/search';
                 queryParams.append('query', filters.searchQuery);
             } else {
@@ -94,22 +95,15 @@ export default function AnimesPage() {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [filters, currentYear]);
+    }, [filters]);
 
+    // Sincroniza tempSearchQuery com o filtro atual
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setTempSearchQuery(filters.searchQuery);
     }, [filters.searchQuery]);
 
-    useEffect(() => {
-        if (isInitialized && !hasSetDefaultGenre.current) {
-            if (filters.selectedGenres.length === 0) {
-                updateFilter({ selectedGenres: [ANIMATION_GENRE_ID] });
-            }
-            hasSetDefaultGenre.current = true;
-        }
-    }, [isInitialized, filters.selectedGenres, updateFilter]);
-
+    // Busca quando os filtros ou página mudam
     useEffect(() => {
         if (isInitialized) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -163,17 +157,6 @@ export default function AnimesPage() {
             fetchAnimes(filters.currentPage + 1, true);
             updateFilter({ currentPage: filters.currentPage + 1 });
         }
-    };
-
-    const handleResetFilters = () => {
-        updateFilter({
-            searchQuery: '',
-            selectedGenres: [ANIMATION_GENRE_ID],
-            sortBy: 'vote_count.desc',
-            selectedYear: '',
-            minRating: '',
-            currentPage: 1,
-        });
     };
 
     const handleShowInfo = (anime: MediaItem) => {
@@ -232,9 +215,6 @@ export default function AnimesPage() {
                             Animes
                             <JapaneseYen className="text-3xl md:text-4xl text-indigo-500" />
                         </h1>
-{/*                        <p className="text-sm text-gray-400">
-                            🇯🇵 Japão · 🇰🇷 Coreia · 🇨🇳 China — lançamentos de {currentYear}
-                        </p>*/}
                     </div>
 
                     <div className="mb-8 space-y-4">
@@ -259,7 +239,7 @@ export default function AnimesPage() {
                             genres={genres}
                             selectedGenres={filters.selectedGenres}
                             onToggleGenre={toggleGenre}
-                            onClearFilters={handleResetFilters}
+                            onClearFilters={resetFilters}
                             activeFiltersCount={activeFiltersCount}
                             yearLabel="Ano de estreia"
                         />
@@ -314,9 +294,9 @@ export default function AnimesPage() {
                             <div className="text-gray-400 mb-4">
                                 {isSearching
                                     ? `Nenhum anime encontrado para "${filters.searchQuery}".`
-                                    : `Nenhum anime de ${currentYear} encontrado com os filtros selecionados.`}
+                                    : `Nenhum anime de ${filters.selectedYear || currentYear} encontrado com os filtros selecionados.`}
                             </div>
-                            <button onClick={handleResetFilters} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                            <button onClick={resetFilters} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                                 Limpar Filtros
                             </button>
                         </div>

@@ -5,14 +5,17 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { MediaCategory } from '@/types/watchlist';
 
 interface WatchlistButtonProps {
-    id: number;
-    mediaType: 'movie' | 'tv';
+    id: number | string;                              // 🆕
+    mediaType: 'movie' | 'tv' | 'channel';            // 🆕
     title: string;
     posterPath: string | null;
     backdropPath?: string | null;
     voteAverage?: number;
     releaseDate?: string;
-    category?: MediaCategory;    // 🆕
+    category?: MediaCategory;
+    // 🆕 Para canais:
+    embedUrl?: string;
+    channelCategory?: string;
     variant?: 'icon' | 'full';
     className?: string;
 }
@@ -26,6 +29,8 @@ export function WatchlistButton({
                                     voteAverage,
                                     releaseDate,
                                     category,
+                                    embedUrl,
+                                    channelCategory,
                                     variant = 'icon',
                                     className = '',
                                 }: WatchlistButtonProps) {
@@ -38,7 +43,9 @@ export function WatchlistButton({
         e.preventDefault();
         e.stopPropagation();
         toggleWatchlist({
-            id, mediaType, title, posterPath, backdropPath, voteAverage, releaseDate, category,
+            id, mediaType, title, posterPath, backdropPath,
+            voteAverage, releaseDate, category,
+            embedUrl, channelCategory,
         });
     };
 
@@ -46,9 +53,9 @@ export function WatchlistButton({
         return (
             <button
                 onClick={handleClick}
-                className={`flex items-center cursor-pointer gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
                     active
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                        ? 'bg-indigo-600 cursor-pointer text-white hover:bg-indigo-700'
                         : 'bg-gray-800 text-white hover:bg-gray-700'
                 } ${className}`}
             >

@@ -2,21 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Bookmark, Film, Tv, Drama, JapaneseYen, Trash2, X } from 'lucide-react';
+import { Bookmark, Film, Tv, Drama, JapaneseYen, Satellite, Trash2, X } from 'lucide-react';
 import Navbar from '@/app/components/Navbar';
+import ChannelPlayer from '@/app/components/ChannelPlayer';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
 import { WatchlistItem } from '@/types/watchlist';
 
-type Filter = 'all' | 'movie' | 'series' | 'doramas' | 'animes';
+type Filter = 'all' | 'movie' | 'series' | 'doramas' | 'animes' | 'channels';
 
 type PendingAction =
     | { type: 'clear-all' }
     | { type: 'remove-item'; item: WatchlistItem }
     | null;
 
-// 🔄 Resolve a categoria de cada item (retrocompat: 'tv' sem category = 'series')
 function getItemCategory(item: WatchlistItem): Exclude<Filter, 'all'> {
+    if (item.mediaType === 'channel') return 'channels';
     if (item.mediaType === 'movie') return 'movie';
     return item.category ?? 'series';
 }
@@ -26,13 +27,16 @@ export default function MinhaListaPage() {
     const [filter, setFilter] = useState<Filter>('all');
     const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
-    // Contadores por categoria
+    // 🆕 Estado do player de canais
+    const [playingChannel, setPlayingChannel] = useState<WatchlistItem | null>(null);
+
     const counts = {
         all: items.length,
         movie: items.filter(i => getItemCategory(i) === 'movie').length,
         series: items.filter(i => getItemCategory(i) === 'series').length,
         doramas: items.filter(i => getItemCategory(i) === 'doramas').length,
         animes: items.filter(i => getItemCategory(i) === 'animes').length,
+        channels: items.filter(i => getItemCategory(i) === 'channels').length,
     };
 
     const filtered = items.filter(item =>
@@ -50,6 +54,12 @@ export default function MinhaListaPage() {
     };
 
     const handleClose = () => setPendingAction(null);
+
+    const handleItemClick = (item: WatchlistItem) => {
+        if (item.mediaType === 'channel' && item.embedUrl) {
+            setPlayingChannel(item);
+        }
+    };
 
     const modalConfig =
         pendingAction?.type === 'clear-all'
@@ -167,6 +177,15 @@ export default function MinhaListaPage() {
                                 <JapaneseYen className="w-4 h-4" />
                                 Animes ({counts.animes})
                             </button>
+                            <button
+                                onClick={() => setFilter('channels')}
+                                className={`px-4 py-2 cursor-pointer rounded-lg text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${
+                                    filter === 'channels' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                                }`}
+                            >
+                                <Satellite className="w-4 h-4" />
+                                Canais ({counts.channels})
+                            </button>
                         </div>
                     )}
 
@@ -176,7 +195,7 @@ export default function MinhaListaPage() {
                             <Bookmark className="w-16 h-16 text-gray-600 mx-auto mb-4" />
                             <p className="text-gray-400 text-lg mb-2">Sua lista está vazia</p>
                             <p className="text-gray-500 text-sm mb-6">
-                                Adicione filmes e séries para assistir depois
+                                Adicione filmes, séries e canais para assistir depois
                             </p>
                             <Link
                                 href="/"
@@ -190,44 +209,95 @@ export default function MinhaListaPage() {
                     {/* Grid */}
                     {filtered.length > 0 && (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-                            {filtered.map(item => (
-                                <div key={`${item.mediaType}-${item.id}`} className="group relative">
-                                    <Link href={`/${item.mediaType}/${item.id}`}>
-                                        <div className="relative rounded-xl overflow-hidden bg-gray-900">
-                                            <img
-                                                src={item.posterPath
-                                                    ? `https://image.tmdb.org/t/p/w500${item.posterPath}`
-                                                    : 'https://via.placeholder.com/500x750?text=Sem+Imagem'}
-                                                alt={item.title}
-                                                className="w-full aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
-                                                loading="lazy"
-                                            />
-                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
-                                                <div className="text-white text-sm font-semibold truncate">
-                                                    {item.title}
-                                                </div>
-                                                {item.releaseDate && (
-                                                    <div className="text-indigo-400 text-xs">
-                                                        {item.releaseDate.split('-')[0]}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </Link>
+                            {filtered.map(item => {
+                                const isChannel = item.mediaType === 'channel';
 
-                                    <button
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setPendingAction({ type: 'remove-item', item });
-                                        }}
-                                        aria-label={`Remover ${item.title} da lista`}
-                                        className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            ))}
+                                // 🎬 Card de canal (diferente — abre player)
+                                if (isChannel) {
+                                    return (
+                                        <div key={`channel-${item.id}`} className="group relative">
+                                            <div
+                                                className="cursor-pointer rounded-xl overflow-hidden bg-gray-900 p-4 hover:scale-105 transition-transform"
+                                                onClick={() => handleItemClick(item)}
+                                            >
+                                                <div className="aspect-square flex items-center justify-center mb-3 bg-gray-800 rounded-lg">
+                                                    <img
+                                                        src={item.posterPath || '/placeholder-channel.png'}
+                                                        alt={item.title}
+                                                        className="max-w-full max-h-full object-contain pointer-events-none"
+                                                        loading="lazy"
+                                                        draggable={false}
+                                                    />
+                                                </div>
+                                                <p className="text-white text-sm font-semibold truncate text-center">
+                                                    {item.title}
+                                                </p>
+                                                {item.channelCategory && (
+                                                    <p className="text-gray-400 text-xs text-center truncate mt-1">
+                                                        {item.channelCategory}
+                                                    </p>
+                                                )}
+                                                <p className="text-indigo-400 text-xs text-center mt-2 flex items-center justify-center gap-1">
+                                                    <Satellite className="w-3 h-3" />
+                                                    Ao vivo
+                                                </p>
+                                            </div>
+
+                                            <button
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    setPendingAction({ type: 'remove-item', item });
+                                                }}
+                                                aria-label={`Remover ${item.title} da lista`}
+                                                className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    );
+                                }
+
+                                // 🎬 Cards normais (filme/série)
+                                return (
+                                    <div key={`${item.mediaType}-${item.id}`} className="group relative">
+                                        <Link href={`/${item.mediaType}/${item.id}`}>
+                                            <div className="relative rounded-xl overflow-hidden bg-gray-900">
+                                                <img
+                                                    src={item.posterPath
+                                                        ? `https://image.tmdb.org/t/p/w500${item.posterPath}`
+                                                        : 'https://via.placeholder.com/500x750?text=Sem+Imagem'}
+                                                    alt={item.title}
+                                                    className="w-full aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
+                                                    loading="lazy"
+                                                />
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                                                    <div className="text-white text-sm font-semibold truncate">
+                                                        {item.title}
+                                                    </div>
+                                                    {item.releaseDate && (
+                                                        <div className="text-indigo-400 text-xs">
+                                                            {item.releaseDate.split('-')[0]}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </Link>
+
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                setPendingAction({ type: 'remove-item', item });
+                                            }}
+                                            aria-label={`Remover ${item.title} da lista`}
+                                            className="absolute top-2 right-2 p-1.5 bg-black/70 hover:bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all cursor-pointer"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
 
@@ -238,12 +308,23 @@ export default function MinhaListaPage() {
                                 Nenhum {filter === 'movie' ? 'filme' :
                                 filter === 'series' ? 'série' :
                                     filter === 'doramas' ? 'dorama' :
-                                        filter === 'animes' ? 'anime' : 'item'} na sua lista
+                                        filter === 'animes' ? 'anime' :
+                                            filter === 'channels' ? 'canal' : 'item'} na sua lista
                             </p>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* 🆕 Player de canal */}
+            {playingChannel && playingChannel.embedUrl && (
+                <ChannelPlayer
+                    channelId={String(playingChannel.id)}
+                    channelName={playingChannel.title}
+                    embedUrl={playingChannel.embedUrl}
+                    onClose={() => setPlayingChannel(null)}
+                />
+            )}
 
             <ConfirmationModal
                 isOpen={pendingAction !== null}
