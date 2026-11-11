@@ -5,18 +5,19 @@ import { useWatchlist } from '@/hooks/useWatchlist';
 import { MediaCategory } from '@/types/watchlist';
 
 interface WatchlistButtonProps {
-    id: number | string;                              // 🆕
-    mediaType: 'movie' | 'tv' | 'channel';            // 🆕
+    id: number | string;
+    mediaType: 'movie' | 'tv' | 'channel';
     title: string;
     posterPath: string | null;
     backdropPath?: string | null;
     voteAverage?: number;
     releaseDate?: string;
     category?: MediaCategory;
-    // 🆕 Para canais:
     embedUrl?: string;
     channelCategory?: string;
     variant?: 'icon' | 'full';
+    /** 🆕 Esconde o texto do botão no mobile (mostra só o ícone) */
+    iconOnlyOnMobile?: boolean;
     className?: string;
 }
 
@@ -32,6 +33,7 @@ export function WatchlistButton({
                                     embedUrl,
                                     channelCategory,
                                     variant = 'icon',
+                                    iconOnlyOnMobile = false,
                                     className = '',
                                 }: WatchlistButtonProps) {
     const { isInWatchlist, toggleWatchlist, isHydrated } = useWatchlist();
@@ -53,14 +55,18 @@ export function WatchlistButton({
         return (
             <button
                 onClick={handleClick}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
+                aria-label={active ? 'Remover da minha lista' : 'Adicionar à minha lista'}
+                title={active ? 'Na Minha Lista' : 'Adicionar à Minha Lista'}
+                className={`flex items-center gap-2 px-3 md:px-4 py-2.5 rounded-lg font-medium transition-all ${
                     active
-                        ? 'bg-indigo-600 cursor-pointer text-white hover:bg-indigo-700'
+                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
                         : 'bg-gray-800 text-white hover:bg-gray-700'
                 } ${className}`}
             >
                 {active ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
-                {active ? 'Na Minha Lista' : 'Adicionar à Minha Lista'}
+                <span className={iconOnlyOnMobile ? 'hidden md:inline' : ''}>
+                    {active ? 'Na Minha Lista' : 'Adicionar à Minha Lista'}
+                </span>
             </button>
         );
     }
@@ -69,7 +75,7 @@ export function WatchlistButton({
         <button
             onClick={handleClick}
             aria-label={active ? 'Remover da minha lista' : 'Adicionar à minha lista'}
-            className={`p-2 rounded-full cursor-pointer backdrop-blur-sm transition-all ${
+            className={`p-2 rounded-full backdrop-blur-sm transition-all ${
                 active ? 'bg-indigo-600 text-white' : 'bg-black/60 text-white hover:bg-black/80'
             } ${className}`}
         >

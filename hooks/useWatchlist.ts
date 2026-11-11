@@ -6,6 +6,13 @@ import { WatchlistItem } from '@/types/watchlist';
 const STORAGE_KEY = 'watchlist';
 const SYNC_EVENT = 'watchlist-sync';
 
+// 🆕 Agenda o dispatch para depois do render atual
+const scheduleSync = () => {
+    setTimeout(() => {
+        window.dispatchEvent(new CustomEvent(SYNC_EVENT));
+    }, 0);
+};
+
 export function useWatchlist() {
     const [items, setItems] = useState<WatchlistItem[]>([]);
     const [isHydrated, setIsHydrated] = useState(false);
@@ -30,7 +37,7 @@ export function useWatchlist() {
             console.error('Erro ao salvar watchlist:', err);
         }
         setItems(next);
-        window.dispatchEvent(new CustomEvent(SYNC_EVENT));
+        scheduleSync();   // 🆕 (antes era window.dispatchEvent direto)
     }, []);
 
     // Sincronização entre abas
@@ -56,9 +63,8 @@ export function useWatchlist() {
         return () => window.removeEventListener(SYNC_EVENT, handler);
     }, []);
 
-// Em useWatchlist.ts
     const isInWatchlist = useCallback(
-        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') =>   // 🆕
+        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') =>
             items.some(item => item.id === id && item.mediaType === mediaType),
         [items]
     );
@@ -70,19 +76,19 @@ export function useWatchlist() {
             }
             const next = [{ ...item, addedAt: Date.now() }, ...prev];
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
-            window.dispatchEvent(new CustomEvent(SYNC_EVENT));
             return next;
         });
+        scheduleSync();   // 🆕 FORA do setItems updater
     }, []);
 
     const removeFromWatchlist = useCallback(
-        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') => {  // 🆕
+        (id: number | string, mediaType: 'movie' | 'tv' | 'channel') => {
             setItems(prev => {
                 const next = prev.filter(i => !(i.id === id && i.mediaType === mediaType));
                 try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
-                window.dispatchEvent(new CustomEvent(SYNC_EVENT));
                 return next;
             });
+            scheduleSync();   // 🆕 FORA do setItems updater
         }, []
     );
 

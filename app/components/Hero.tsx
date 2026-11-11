@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Play, Info, Pause } from 'lucide-react';
 import VideoPlayer from '@/app/components/video-player/index';
+import { WatchlistButton } from '@/components/WatchlistButton';
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -32,7 +33,6 @@ const Hero = () => {
     const [loading, setLoading] = useState(true);
     const [animate, setAnimate] = useState(false);
 
-    // Estados para o player
     const [showPlayer, setShowPlayer] = useState(false);
     const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
     const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -42,7 +42,6 @@ const Hero = () => {
     const touchEndX = useRef<number>(0);
     const progressInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Buscar filmes
     useEffect(() => {
         const fetchPopularMovies = async () => {
             try {
@@ -58,7 +57,6 @@ const Hero = () => {
         fetchPopularMovies();
     }, []);
 
-    // Efeito para animação de zoom
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setAnimate(false);
@@ -66,13 +64,11 @@ const Hero = () => {
         return () => clearTimeout(t);
     }, [currentIndex]);
 
-    // Resetar barra de progresso
     const resetProgress = useCallback(() => {
         setProgressWidth(0);
         if (progressInterval.current) clearInterval(progressInterval.current);
     }, []);
 
-    // Navegação para um slide específico
     const goToSlide = useCallback((index: number, slideDirection: 'left' | 'right' = 'right') => {
         if (index === currentIndex || isTransitioning || movies.length === 0) return;
 
@@ -85,21 +81,18 @@ const Hero = () => {
         setTimeout(() => setIsTransitioning(false), TRANSITION_DURATION);
     }, [currentIndex, isTransitioning, movies.length, resetProgress]);
 
-    // Próximo slide
     const nextSlide = useCallback(() => {
         if (movies.length <= 1 || isTransitioning) return;
         const newIndex = (currentIndex + 1) % movies.length;
         goToSlide(newIndex, 'right');
     }, [currentIndex, movies.length, goToSlide, isTransitioning]);
 
-    // Slide anterior
     const prevSlide = useCallback(() => {
         if (movies.length <= 1 || isTransitioning) return;
         const newIndex = (currentIndex - 1 + movies.length) % movies.length;
         goToSlide(newIndex, 'left');
     }, [currentIndex, movies.length, goToSlide, isTransitioning]);
 
-    // Autoplay com barra de progresso
     useEffect(() => {
         if (autoplayActive && movies.length > 0 && !isTouching && !isTransitioning) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -122,9 +115,9 @@ const Hero = () => {
         };
     }, [autoplayActive, currentIndex, movies.length, isTouching, isTransitioning, nextSlide, resetProgress]);
 
-    // Touch events
     const handleTouchStart = (e: React.TouchEvent) => {
         touchStartX.current = e.touches[0].clientX;
+        touchEndX.current = e.touches[0].clientX;   // 🆕 reset aqui
         setIsTouching(true);
         resetProgress();
     };
@@ -140,9 +133,10 @@ const Hero = () => {
             if (touchDiff > 0) nextSlide();
             else prevSlide();
         }
+        touchStartX.current = 0;   // 🆕
+        touchEndX.current = 0;     // 🆕
     };
 
-    // Ações dos botões
     const handleWatchMovie = useCallback(async (movie: Movie) => {
         setIsLoadingDetails(true);
         try {
@@ -167,7 +161,6 @@ const Hero = () => {
         router.push(`/movie/${movie.id}`);
     }, [router]);
 
-    // Determinar posição do slide para animação
     const getSlidePosition = (index: number) => {
         if (index === currentIndex) return 'center';
         if (index === (currentIndex + 1) % movies.length) return 'right';
@@ -175,7 +168,6 @@ const Hero = () => {
         return 'offscreen';
     };
 
-    // Loading
     if (loading) {
         return (
             <div className="relative h-[40vh] md:h-[80vh] w-full overflow-hidden bg-gradient-to-r from-gray-900 to-gray-950 animate-pulse">
@@ -207,7 +199,7 @@ const Hero = () => {
                     />
                 </div>
 
-                {/* Controles Superiores (dots + autoplay) */}
+                {/* Controles Superiores */}
                 <div className="absolute top-4 right-4 z-30 flex items-center gap-3 bg-black/20 backdrop-blur-md rounded-full px-4 py-2 border border-white/10">
                     <div className="flex gap-1.5 items-center">
                         {movies.map((_, index) => (
@@ -271,7 +263,6 @@ const Hero = () => {
                                         )}
                                         draggable={false}
                                     />
-                                    {/* Gradientes sobrepostos */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent" />
                                     <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
@@ -286,17 +277,14 @@ const Hero = () => {
                                                 isCurrent ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0"
                                             )}
                                         >
-                                            {/* Badge */}
                                             <div className="inline-block px-3 py-1 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 text-xs font-bold uppercase tracking-widest backdrop-blur-sm mb-4">
                                                 Destaque da Semana
                                             </div>
 
-                                            {/* Título */}
                                             <h2 className="text-2xl md:text-6xl lg:text-6xl font-black max-w-2xl leading-tight">
                                                 {movie.title}
                                             </h2>
 
-                                            {/* Informações */}
                                             <div className="flex items-center gap-4 text-sm md:text-base mt-4">
                                                 <span className="text-gray-300">{year}</span>
                                                 <div className="flex items-center gap-1">
@@ -310,33 +298,57 @@ const Hero = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Descrição */}
                                             <p className="text-gray-300 text-sm md:text-lg max-w-xl line-clamp-2 md:line-clamp-4 mt-4">
                                                 {movie.overview || 'Sinopse não disponível.'}
                                             </p>
 
                                             {/* Botões */}
-                                            <div className="flex gap-4 mt-6 md:mt-8">
+                                            <div
+                                                className="flex flex-wrap items-center gap-2 md:gap-4 mt-6 md:mt-8"
+                                                onTouchStart={(e) => e.stopPropagation()}
+                                                onTouchMove={(e) => e.stopPropagation()}
+                                                onTouchEnd={(e) => e.stopPropagation()}
+                                            >
+                                                {/* Assistir Agora */}
                                                 <button
                                                     onClick={() => handleWatchMovie(movie)}
-                                                    className="group relative px-6 md:px-8 py-2.5 md:py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all duration-300 cursor-pointer overflow-hidden"
+                                                    aria-label="Assistir Agora"
+                                                    title="Assistir Agora"
+                                                    className="group/btn relative px-3 md:px-8 py-2.5 md:py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all duration-300 cursor-pointer overflow-hidden"
                                                 >
-                                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
                                                     <div className="relative flex items-center gap-2 text-white font-semibold text-sm md:text-base">
                                                         <Play className="w-4 h-4 md:w-5 md:h-5 fill-current" />
-                                                        Assistir Agora
+                                                        <span className="hidden md:inline">Assistir Agora</span>
                                                     </div>
                                                 </button>
 
+                                                {/* Mais Informações */}
                                                 <button
                                                     onClick={(e) => handleShowInfo(movie, e)}
-                                                    className="group relative px-6 md:px-8 py-2.5 md:py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-300 cursor-pointer overflow-hidden border border-white/20"
+                                                    aria-label="Mais Informações"
+                                                    title="Mais Informações"
+                                                    className="group/btn relative px-3 md:px-8 py-2.5 md:py-3 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-lg transition-all duration-300 cursor-pointer overflow-hidden border border-white/20"
                                                 >
                                                     <div className="relative flex items-center gap-2 text-white font-semibold text-sm md:text-base">
                                                         <Info className="w-4 h-4 md:w-5 md:h-5" />
-                                                        Mais Informações
+                                                        <span className="hidden md:inline">Mais Informações</span>
                                                     </div>
                                                 </button>
+
+                                                {/* 🔖 Watchlist */}
+                                                <WatchlistButton
+                                                    id={movie.id}
+                                                    mediaType="movie"
+                                                    title={movie.title}
+                                                    posterPath={movie.poster_path}
+                                                    backdropPath={movie.backdrop_path}
+                                                    voteAverage={movie.vote_average}
+                                                    releaseDate={movie.release_date}
+                                                    variant="full"
+                                                    iconOnlyOnMobile={true}
+                                                    className="px-3 md:px-4 py-2.5 md:py-3 md:text-base"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -361,7 +373,6 @@ const Hero = () => {
                 </div>
             </section>
 
-            {/* Video Player e Loading */}
             {showPlayer && selectedMovie && (
                 <VideoPlayer
                     movieId={selectedMovie.id}
