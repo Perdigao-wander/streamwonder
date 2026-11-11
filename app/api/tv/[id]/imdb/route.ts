@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {TMDB_BASE_URL, TMDB_TOKEN} from "@/lib/utils";
-
+import { TMDB_BASE_URL, TMDB_TOKEN } from "@/lib/utils";
 
 const imdbCache = new Map<string, { imdbId: string | null; timestamp: number }>();
 const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 dias
 
-async function getParamsId(
-    params: Promise<{ id: string }> | { id: string }
-): Promise<string> {
-    const resolvedParams = await params;
-    return resolvedParams.id;
-}
-
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }   // 👈 só Promise
 ) {
     try {
-        const tvId = await getParamsId(params);
+        const { id: tvId } = await params;             // 👈 await direto
 
         // Verifica cache
         const cached = imdbCache.get(tvId);

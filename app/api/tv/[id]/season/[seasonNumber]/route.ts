@@ -121,12 +121,11 @@ type SeasonAPIResponse = {
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string; seasonNumber: string }> | { id: string; seasonNumber: string } }
+    { params }: { params: Promise<{ id: string; seasonNumber: string }> }
 ) {
     try {
         // Resolve os parâmetros (Next.js 15+ usa Promise)
-        const resolvedParams = await params;
-        const { id, seasonNumber } = resolvedParams;
+        const { id, seasonNumber } = await params;
 
         const tvId = parseInt(id);
         const seasonNum = parseInt(seasonNumber);
