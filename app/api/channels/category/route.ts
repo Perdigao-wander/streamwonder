@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
-import {WAREZCDN_API} from "@/lib/utils";
+import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, WAREZCDN_API} from "@/lib/utils";
 import hooman from 'hooman';
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult','24-horas','canais-abertos','casa-do-patrao' ];
 
 export async function GET() {
     try {
-        const response = await hooman.get(`${WAREZCDN_API}?category=channel_categories&format=json`);
+        const response = await hooman.get(
+            `${WAREZCDN_API}?category=channel_categories&format=json`,
+            {
+                context: {
+                    captchaKey: HOOMAN_CAPTCHA_KEY,
+                    rucaptcha: HOOMAN_RUCAPTCHA,
+                },
+            }
+        );
 
         const data = typeof response.body === 'string'
             ? JSON.parse(response.body)

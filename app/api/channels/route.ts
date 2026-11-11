@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {WAREZCDN_API} from "@/lib/utils";
+import {HOOMAN_CAPTCHA_KEY, HOOMAN_RUCAPTCHA, WAREZCDN_API} from "@/lib/utils";
 import hooman from 'hooman';
 
 const BLOCKED_CATEGORIES = ['adulto', 'adult'];
@@ -22,7 +22,13 @@ export async function GET(request: NextRequest) {
         if (genre) {
             url += `&genre=${encodeURIComponent(genre)}`;
         }
-        const response = await hooman.get(url);
+        const response = await hooman.get(url,
+            {
+                context: {
+                    captchaKey: HOOMAN_CAPTCHA_KEY,
+                    rucaptcha: HOOMAN_RUCAPTCHA,
+                },
+            });
         const data = typeof response.body === 'string'
             ? JSON.parse(response.body)
             : response.body;
