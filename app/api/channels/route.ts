@@ -43,8 +43,6 @@ export async function GET(request: NextRequest) {
             ? JSON.parse(response.body)
             : response.body;
 
-        console.log(JSON.parse(response.body))
-
         if (data.success) {
             // Filtrar canais adultos
             const filteredChannels = data.data.filter((channel: any) => {
